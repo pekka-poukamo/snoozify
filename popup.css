@@ -1,0 +1,38 @@
+body {
+	width: 14rem;
+	padding: 2rem 1.5rem;
+	margin: 0;
+}
+
+button {
+	width: 100%;
+	height: 2.5rem;
+	margin-bottom: 0.5rem;
+}
+
+h1, h2, h3, h4 {
+	margin-top: 0;
+}
+
+.history-link {
+	margin-bottom: 1rem;
+}
+
+.history-link h3 {
+	margin-bottom: 0.25rem;
+}
+
+.history-link button {
+	height: 1.5rem;
+	width: auto;
+}
+
+hr {
+	margin: 1rem 0;
+}
+
+/*h3 {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}*/
