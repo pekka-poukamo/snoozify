@@ -9,31 +9,21 @@
 </head>
 <body>
 	<h4><a href="popup.html"><—</a> snoozify</h4>
-	<h1>history</h1>
+	<h1>snoozed pages</h1>
 
-	<div class="history-link">
-		<h3><a href=""> Title - Lorem ipsum dolor sit amet lorem ipsum</a></h3>
-		<span>Tomorrow • 08:00</span>
-		<a href="">Wake up now</a>
+	<div id="page-links">
+		
 	</div>
 
-	<div class="history-link">
-		<h3><a href=""> Title - Lorem ipsum dolor sit amet lorem ipsum</a></h3>
-		<span>Tomorrow • 08:00</span>
-		<a href="">Wake up now</a>
-	</div>
-	<div class="history-link">
-		<h3><a href=""> Title - Lorem ipsum dolor sit amet lorem ipsum</a></h3>
-		<span>Tomorrow • 08:00</span>
-		<a href="">Wake up now</a>
-	</div>
-	<div class="history-link">
-		<h3><a href=""> Title - Lorem ipsum dolor sit amet lorem ipsum</a></h3>
-		<span>Tomorrow • 08:00</span>
-		<a href="">Wake up now</a>
-	</div>
+	<button id="clear-button">Clear all</button>
 
-
+	<template id="page-link-template">
+		<div class="page-link">
+			<a class="page-link__url" href=""><h3 class="page-link__title"></h3></a>
+			<span class="page-link__wakeupdate"></span>
+			<a href="">Wake up now</a>
+		</div>
+	</template>
 
 </body>
 </html>
