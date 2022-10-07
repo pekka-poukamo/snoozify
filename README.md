@@ -2,6 +2,9 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 
 ## Todo
 
-- Store data
-- Display stored data
 - Wake up pages
+	- Scheduled
+	- Wake up now
+- Add time control
+- Styling
+- Later

@@ -25,11 +25,7 @@ const getNextWeekdayFromDate = (date, weekday) => {
 const getNextWeekdaysFromToday = () => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday]))
 
 const getClickFunction = date => async () => {
-	// date.setTime(8*60*60*1000) // TODO fix to take local time into account
-
 	date.setHours(8, 0, 0, 0)
-
-	console.log('click', date)
 
 	const tabs = await chrome.tabs.query({highlighted: true, currentWindow: true})
 	const pages = tabs.map(tab => ({
@@ -53,7 +49,7 @@ const initializeWeekDayButtons = () => {
 		const button = document.querySelector('#datebutton').content.cloneNode(true)
 
 		button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
-		button.querySelector('.datebutton__date').textContent =  new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
+		button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
 		button.children[0].setAttribute('value', weekday.toISOString())
 		// button.addEventListener('click', getClickFunction(weekday))
 
@@ -62,6 +58,8 @@ const initializeWeekDayButtons = () => {
 }
 
 const initializeHistory = () => {
+	const dateFormatOptions = {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: false}
+
 	chrome.storage.local.get({'snoozedPages': []}, result => {
 		const pageLinksElement = document.querySelector('#page-links')
 		pageLinksElement.innerHTML = ''
@@ -69,24 +67,38 @@ const initializeHistory = () => {
 		if (result.snoozedPages.length === 0) {
 			pageLinksElement.innerHTML = 'No snoozed pages yet.'
 		}
-		result.snoozedPages.map(page => {
+		result.snoozedPages
+		.sort(byDate)
+		.map(page => {
 			const pageLink = document.querySelector('#page-link-template').content.cloneNode(true)
 
 			pageLink.querySelector('.page-link__url').href = page.url
 			pageLink.querySelector('.page-link__title').textContent = page.title
-			pageLink.querySelector('.page-link__wakeupdate').textContent = page.wakeUpDate
+			pageLink.querySelector('.page-link__wakeupdate').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(new Date(page.wakeUpDate))
 			return pageLink
 		}).forEach(pageLink => pageLinksElement.appendChild(pageLink))
 	})
 }
 
+// getUID function from https://dev.to/rahmanfadhil/how-to-generate-unique-id-in-javascript-1b13#comment-1ol48
+const getUID = () => String(
+    Date.now().toString(32) + Math.random().toString(16)
+  ).replace(/\./g, '')
+
+const byDate = (page1, page2) => {
+	console.log('sort', page1.wakeUpDate, page2.wakeUpDate, new Date(page1.wakeUpDate) - new Date(page2.wakeUpDate))
+	return new Date(page1.wakeUpDate) - new Date(page2.wakeUpDate)
+}
+
 
 const snoozePages = (pages) => {
+
+
 	chrome.storage.local.get({'snoozedPages': []}, (result) => {
 		const snoozedPages = result.snoozedPages
 
 		pages.forEach(page => snoozedPages.push({
-			id: Math.random(), // TODO get proper id in place
+			id: getUID(),
 			wakeUpDate: page.wakeUpDate.toISOString(),
 			title: page.title,
 			url: page.url,
