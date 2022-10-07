@@ -24,6 +24,25 @@ const getNextWeekdayFromDate = (date, weekday) => {
 
 const getNextWeekdaysFromToday = () => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday]))
 
+const getClickFunction = date => async () => {
+	// date.setTime(8*60*60*1000) // TODO fix to take local time into account
+
+	date.setHours(8, 0, 0, 0)
+
+	console.log('click', date)
+
+	const tabs = await chrome.tabs.query({highlighted: true, currentWindow: true})
+	const pages = tabs.map(tab => ({
+		title: tab.title,
+		url: tab.url,
+		wakeUpDate: date,
+	}))
+	
+	snoozePages(pages)
+	chrome.tabs.remove(tabs.map(tab => tab.id))
+}
+
+
 const initializeWeekDayButtons = () => {
 	document.querySelector('#buttons').innerHTML = ''
 
@@ -36,6 +55,7 @@ const initializeWeekDayButtons = () => {
 		button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
 		button.querySelector('.datebutton__date').textContent =  new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
 		button.children[0].setAttribute('value', weekday.toISOString())
+		// button.addEventListener('click', getClickFunction(weekday))
 
 		return button
 	}).forEach(button => document.querySelector('#buttons').appendChild(button))
@@ -61,15 +81,17 @@ const initializeHistory = () => {
 }
 
 
-const snoozePage = (url, title, wakeUpDate) => {
+const snoozePages = (pages) => {
 	chrome.storage.local.get({'snoozedPages': []}, (result) => {
 		const snoozedPages = result.snoozedPages
 
-		snoozedPages.push({
-			id: Math.random(),
-			wakeUpDate: wakeUpDate.toISOString(),
-			url, title, 
-		})
+		pages.forEach(page => snoozedPages.push({
+			id: Math.random(), // TODO get proper id in place
+			wakeUpDate: page.wakeUpDate.toISOString(),
+			title: page.title,
+			url: page.url,
+		}))
+		
 
 		chrome.storage.local.set({'snoozedPages': snoozedPages})
 	})
@@ -82,8 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
 	// initialize main popup page
 	if (window.location.href.match('popup.html')) {
 		initializeWeekDayButtons()
+
+		Array.from(document.querySelector('#buttons').children).forEach(child => child.addEventListener('click', getClickFunction(new Date(child.value))))
 	}
 
+	// initialize history page
 	if (window.location.href.match('history.html')) {
 		initializeHistory()
 
