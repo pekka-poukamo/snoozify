@@ -26,9 +26,6 @@ const getNextWeekdayFromDate = (date, weekday) => {
 
 const getNextWeekdaysFromToday = () => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday]))
 
-
-console.log(getNextWeekdaysFromToday())
-
 document.addEventListener("DOMContentLoaded", () => {
 	getNextWeekdaysFromToday().map(weekday => {
 		const button = document.querySelector('#datebutton').content.cloneNode(true)
