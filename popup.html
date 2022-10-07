@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>snoozify</title>
 	<link rel="stylesheet" type="text/css" href="popup.css">
+	<script src="script.js"></script>
 </head>
 <body>
 	<h1>snoozify</h1>
@@ -12,13 +13,20 @@
 	<input type="checkbox" name="later" checked>
 	<label for="later">Only weekdays</label>
 	<hr>
-	<button>Monday</button>
+	<div id="buttons">
+		
+	</div>
+<!-- 	<button>Monday</button>
 	<button>Tuesday</button>
 	<button>Wednesday</button>
 	<button>Thursday</button>
 	<button>Friday</button>
 	<button>Saturday</button>
-	<button>Sunday</button>
+	<button>Sunday</button> -->
 	<a href="history.html">See history</a>
+
+	<template id="datebutton">
+		<button value=""><span class="datebutton__weekday"></span> — <span class="datebutton__date"></span></button>
+	</template>
 </body>
 </html>
