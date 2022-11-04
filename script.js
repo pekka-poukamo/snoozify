@@ -8,20 +8,11 @@ const WEEKDAYS = {
 	'SUN': 0,
 }
 
-/*
-	Main functions
-*/
 
-const openPageById = id => {
-	getSnoozedPages().then(snoozedPages => {
-		const page = snoozedPages.find(page => page.id === id);
-		chrome.tabs.create({
-			url: page.url
-		})
-	})
-}
 
-const snoozePages = (pages) => {
+/* Main functions */
+
+const snoozePages = pages => {
 	return getSnoozedPages().then(snoozedPages => {
 		pages.forEach(page => snoozedPages.push({
 			id: getUID(),
@@ -34,9 +25,46 @@ const snoozePages = (pages) => {
 	})
 }
 
-/*
-	Building the UI
-*/
+const wakePages = pages => {
+
+}
+
+
+const openPageById = id => {
+	return getSnoozedPages().then(snoozedPages => {
+		const page = snoozedPages.find(page => page.id === id);
+		chrome.tabs.create({
+			url: page.url
+		})
+	})
+}
+
+const openPagesDueBy = date => {
+	getSnoozedPages()
+	.then(snoozedPages => {
+		pagesDue = snoozedPages.filter(page => page.openedDate === undefined && Date.parse(page.wakeUpDate) <= date)
+
+		pagesDue.forEach(page => {
+			 chrome.tabs.create({
+				url: page.url
+			})
+		})
+
+		const currentDate = (new Date).toISOString()
+
+		snoozedPages.forEach(page => {
+			if (pagesDue.find(duePage => duePage.id === page.id)) {
+				page.openedDate = currentDate
+			}
+		})
+
+		return setSnoozedPages(snoozedPages)
+	})
+}
+
+
+
+/* Building the UI */
 
 const initializeWeekDayButtons = () => {
 	const buttonContainer = document.querySelector('#buttons')
@@ -109,9 +137,9 @@ const getWakeupButtonFunction = id => async () => {
 	setPageValue(id, 'openedDate', (new Date().toISOString()))
 }
 
-/*
-	Storage access
-*/
+
+
+/* Storage access */
 
 const clearSnoozedPages = () => chrome.storage.local.set({'snoozedPages': []})
 
@@ -150,17 +178,17 @@ const setSnoozedPages = snoozedPages => {
 }
 
 const setPageValue = (id, field, value) => {
-	getSnoozedPages().then(snoozedPages => {
+	return getSnoozedPages().then(snoozedPages => {
 		const page = snoozedPages.find(page => page.id === id);
 		page[field] = value
 
-		chrome.storage.local.set({'snoozedPages': snoozedPages})
+		return setSnoozedPages(snoozedPages)
 	})
 }
 
-/* 
-	Utilities
-*/
+
+
+/* Utilities */
 
 const byDate = (page1, page2) => new Date(page1.wakeUpDate) - new Date(page2.wakeUpDate)
 
@@ -192,9 +220,8 @@ const getNextWeekdayFromDate = (date, weekday) => {
 const getNextWeekdaysFromToday = () => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday]))
 
 
-/*
-	Run the extension
-*/
+
+/* Run the extension */
 
 document.addEventListener("DOMContentLoaded", () => {
 	// initialize main popup page
