@@ -6,7 +6,7 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 - Styling
 - "Later"-button
 	- Only weekdays option
-- Adjust to next 7 days
+- Notification for waking up
 
 
 ## Design ideas
