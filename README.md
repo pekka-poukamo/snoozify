@@ -4,7 +4,6 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 
 - Wake up pages
 	- Scheduled
-	- Wake up now
 - Add time control
 - Styling
 - Later functionality
@@ -15,7 +14,6 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 - Filter pages that haven't been woken up and wake up time earlier than now
 	- Open pages
 	- Mark pages as opened
-- (In history, filter opened pages away)
 
 
 ## Design ideas
