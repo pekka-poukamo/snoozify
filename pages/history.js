@@ -1,6 +1,6 @@
-import Storage from './storage.js'
-import { byDate } from './utils.js'
-import { openPageById } from './snoozer.js'
+import Storage from '/scripts/storage.js'
+import { byDate } from '/scripts/utils.js'
+import { openPageById } from '/scripts/snoozer.js'
 
 const initializeHistory = () => {
 	Storage.getSnoozedPages()

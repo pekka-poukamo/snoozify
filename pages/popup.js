@@ -1,11 +1,11 @@
-import { snoozePages } from './snoozer.js'
-import Storage from './storage.js'
+import { snoozePages } from '/scripts/snoozer.js'
+import Storage from '/scripts/storage.js'
 import {
 	getUID,
 	trace,
 	getNextWeekdayFromDate,
 	getNextWeekdaysFromToday,
-} from './utils.js'
+} from '/scripts//utils.js'
 
 
 const initializeWeekDayButtons = () => {
