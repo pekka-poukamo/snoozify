@@ -87,6 +87,10 @@ hr {
 	overflow: hidden;
 }*/
 
+.datebutton[futureweek = true] {
+	opacity: 0.65;
+}
+
 
 /* Dev environment */
 

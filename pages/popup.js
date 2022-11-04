@@ -5,6 +5,8 @@ import {
 	trace,
 	getNextWeekdayFromDate,
 	getNextWeekdaysFromToday,
+	byDate,
+	datesSameWeek,
 } from '/scripts//utils.js'
 
 
@@ -27,9 +29,14 @@ const getSnoozeButton = buttonTemplate => weekday => {
 	button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
 	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
 	button.children[0].setAttribute('value', weekday.toISOString())
+	if (!datesSameWeek(weekday, new Date())) {
+		button.children[0].setAttribute('futureweek', 'true')
+	}
 
 	return button
 }
+
+
 
 const getSnoozeButtonFunction = date => async () => {
 	date.setHours(8, 0, 0, 0)
