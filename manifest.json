@@ -6,8 +6,13 @@
 	"action": {
 		"default_popup": "/pages/popup.html"
 	},
+	"background": {
+		"service_worker": "/scripts/worker.js",
+		"type": "module"
+	},
 	"permissions": [
 		"storage",
-		"tabs"
+		"tabs",
+		"alarms"
 	]
 }
