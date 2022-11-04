@@ -26,7 +26,6 @@ const getSnoozeButton = buttonTemplate => weekday => {
 	button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
 	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
 	button.children[0].setAttribute('value', weekday.toISOString())
-	// button.addEventListener('click', getSnoozeButtonFunction(weekday))
 
 	return button
 }
