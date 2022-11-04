@@ -7,9 +7,9 @@ html {
 }
 
 body {
-	width: 18rem;
-	padding: 2rem 1rem;
-	margin: 0;
+	width: 17rem;
+	padding: 2rem 1.5rem;
+	margin: 0 0 auto 0;
 	color: var(--text-color);
 }
 
