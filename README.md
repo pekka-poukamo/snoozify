@@ -2,18 +2,11 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 
 ## Todo
 
-- Wake up pages
-	- Scheduled
 - Add time control
 - Styling
-- Later functionality
-
-
-## Waking up
-- Timer every minute
-- Filter pages that haven't been woken up and wake up time earlier than now
-	- Open pages
-	- Mark pages as opened
+- "Later"-button
+	- Only weekdays option
+- Adjust to next 7 days
 
 
 ## Design ideas
