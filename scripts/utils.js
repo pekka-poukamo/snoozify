@@ -21,7 +21,7 @@ export const trace = string => object => {
 	return object
 }
 
-export const getNextWeekdayFromDate = (date, weekday) => {
+export const getNextWeekdayFromDate = (date, weekday, options) => {
 	const currentWeekday = date.getDay(); // 0 (Sun) - 6 (sat)
 	let daysToAdvance = (weekday - currentWeekday)
 
@@ -30,12 +30,12 @@ export const getNextWeekdayFromDate = (date, weekday) => {
 	}
 
 	const newDate = new Date()
-	newDate.setUTCDate(date.getUTCDate() + daysToAdvance)
+	newDate.setUTCDate(date.getUTCDate() + daysToAdvance + (options.additionalWeek ? 7 : 0))
 
 	return newDate;
 }
 
-export const getNextWeekdaysFromToday = () => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday]))
+export const getNextWeekdaysFromToday = (options) => Object.keys(WEEKDAYS).map(weekday => getNextWeekdayFromDate(new Date(), WEEKDAYS[weekday], options))
 
 export default {
 	byDate,

@@ -8,13 +8,14 @@ import {
 } from '/scripts//utils.js'
 
 
-const initializeWeekDayButtons = () => {
+const initializeWeekDayButtons = (options = {}) => {
 	const buttonContainer = document.querySelector('#buttons')
 	buttonContainer.innerHTML = ''
 
-	getNextWeekdaysFromToday()
+	getNextWeekdaysFromToday({additionalWeek: options.additionalWeek})
 	.map(getSnoozeButton(document.querySelector('#datebutton').content))
 	.forEach(button => buttonContainer.appendChild(button))
+	Array.from(document.querySelector('#buttons').children).forEach(child => child.addEventListener('click', getSnoozeButtonFunction(new Date(child.value))))
 }
 
 const getSnoozeButton = buttonTemplate => weekday => {
@@ -46,5 +47,17 @@ const getSnoozeButtonFunction = date => async () => {
 
 document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
-	Array.from(document.querySelector('#buttons').children).forEach(child => child.addEventListener('click', getSnoozeButtonFunction(new Date(child.value))))
+
+	document.addEventListener('keydown', event => {
+		if (event.key === 'Shift') {
+			initializeWeekDayButtons({additionalWeek: true})
+		}
+	})
+
+	document.addEventListener('keyup', event => {
+		if (event.key === 'Shift') {
+			initializeWeekDayButtons({additionalWeek: false})
+		}
+	})
 })
+
