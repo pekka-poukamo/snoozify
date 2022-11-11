@@ -2,12 +2,16 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 
 ## Todo
 
+- Tests
+- Notification for waking up pages
 - Add time control
 - Styling
+- Tomorrow button
 - "Later"-button
 	- Only weekdays option
-- Notification for waking up
 
+## Bugs
+- https://www.inkandswitch.com/potluck/ can't be snoozed
 
 ## Design ideas
 - https://randoma11y.com/?ref=sidebar
