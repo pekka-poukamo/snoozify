@@ -6,7 +6,6 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 - Notification for waking up pages
 - Add time control
 - Styling
-- Tomorrow button
 - "Later"-button
 	- Only weekdays option
 

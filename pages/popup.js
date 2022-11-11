@@ -20,6 +20,11 @@ const initializeWeekDayButtons = (options = {}) => {
 	Array.from(document.querySelector('#buttons').children).forEach(child => child.addEventListener('click', getSnoozeButtonFunction(new Date(child.value))))
 }
 
+const initializeTomorrowButton = () => {
+	document.querySelector('#tomorrow-button')
+	.addEventListener('click', getSnoozeButtonFunction(new Date(Date.now() + 60*60*24*1000)))
+}
+
 const getSnoozeButton = buttonTemplate => weekday => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
@@ -54,6 +59,7 @@ const getSnoozeButtonFunction = date => async () => {
 
 document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
+	initializeTomorrowButton()
 
 	document.addEventListener('keydown', event => {
 		if (event.key === 'Shift') {

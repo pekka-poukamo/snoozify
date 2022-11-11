@@ -91,6 +91,14 @@ hr {
 	opacity: 0.65;
 }
 
+.datebutton:last-child {
+	margin-bottom: 0;
+}
+
+.bottom-nav {
+	text-align: center;
+	margin-top: 1rem;
+}
 
 /* Dev environment */
 

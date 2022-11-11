@@ -9,14 +9,23 @@
 </head>
 <body>
 	<h1>snoozify</h1>
-<!-- 	<button>Later</button>
-	<input type="checkbox" name="later" checked>
-	<label for="later">Only weekdays</label>
-	<hr> -->
+	<div class="special-buttons">
+		<!-- 	<button>Later</button>
+			<input type="checkbox" name="later" checked>
+			<label for="later">Only weekdays</label>
+		-->
+		<button class="datebutton" id="tomorrow-button">Tomorrow</button>
+	</div>
+	<hr>
+	
 	<div id="buttons">
 		
 	</div>
-	<a href="history.html">See history</a>
+
+
+	<div class="bottom-nav">
+		<a href="history.html">See history</a>
+	</div>
 
 	<template id="datebutton">
 		<button class="datebutton" value=""><span class="datebutton__weekday"></span> — <span class="datebutton__date"></span></button>
