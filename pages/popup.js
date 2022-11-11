@@ -49,7 +49,7 @@ const getSnoozeButtonFunction = date => async () => {
 	}))
 	
 	snoozePages(pages)
-	chrome.tabs.remove(tabs.map(tab => tab.id))
+	.then(result => chrome.tabs.remove(tabs.map(tab => tab.id)))
 }
 
 document.addEventListener("DOMContentLoaded", () => {
