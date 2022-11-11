@@ -1,9 +1,9 @@
-const clearSnoozedPages = () => chrome.storage.local.set({'snoozedPages': []})
+const clearSnoozedPages = () => chrome.storage.sync.set({'snoozedPages': []})
 
 const getSnoozedPages = () => {
 	return new Promise((resolve, reject) => {
 		try {
-			chrome.storage.local.get({'snoozedPages': []}, result => {
+			chrome.storage.sync.get({'snoozedPages': []}, result => {
 				if (chrome.runtime.lastError) {
 					reject(chrome.runtime.lastError)
 				}
@@ -21,7 +21,7 @@ const getSnoozedPages = () => {
 const setSnoozedPages = snoozedPages => {
 	return new Promise((resolve, reject) => {
 		try {
-			chrome.storage.local.set({'snoozedPages': snoozedPages}, result => {
+			chrome.storage.sync.set({'snoozedPages': snoozedPages}, result => {
 				if (chrome.runtime.lastError) {
 					reject(chrome.runtime.lastError)
 				}
