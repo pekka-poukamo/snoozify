@@ -30,7 +30,7 @@ const getSnoozeButton = buttonTemplate => weekday => {
 	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
 	button.children[0].setAttribute('value', weekday.toISOString())
 	if (!datesSameWeek(weekday, new Date())) {
-		button.children[0].setAttribute('futureweek', 'true')
+		button.children[0].classList.add('future-week')
 	}
 
 	return button

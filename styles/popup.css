@@ -87,7 +87,7 @@ hr {
 	overflow: hidden;
 }*/
 
-.datebutton[futureweek = true] {
+.datebutton.future-week {
 	opacity: 0.65;
 }
 
