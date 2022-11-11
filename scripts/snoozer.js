@@ -55,7 +55,7 @@ export const openPagesDueBy = date => {
 			}
 		})
 
-		return Storage.setSnoozedPages(snoozedPages)
+		return Storage.setSnoozedPages(snoozedPages).then(Promise.resolve(pagesDue))
 	})
 }
 

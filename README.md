@@ -3,7 +3,6 @@ Starting point tutorial: https://www.codeinwp.com/blog/how-to-write-a-chrome-ext
 ## Todo
 
 - Tests
-- Notification for waking up pages
 - Add time control
 - Styling
 - "Later"-button
