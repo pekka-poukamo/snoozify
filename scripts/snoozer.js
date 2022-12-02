@@ -33,12 +33,12 @@ export const openPageById = id => {
 }
 
 export const openPagesDueBy = date => {
-	Storage.getSnoozedPages()
+	return Storage.getSnoozedPages()
 	.then(snoozedPages => {
 		const pagesDue = snoozedPages.filter(page => page.openedDate === undefined && Date.parse(page.wakeUpDate) <= date)
 
-		if (!pagesDue) {
-			return Promise.resolve({})
+		if (!pagesDue || pagesDue.length === 0) {
+			return Promise.resolve([])
 		}
 
 		pagesDue.forEach(page => {

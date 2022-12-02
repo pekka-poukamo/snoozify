@@ -16,6 +16,10 @@ chrome.alarms.onAlarm.addListener(alarm => {
 })
 
 const launchPageOpenNotifcation = pagesOpened => {
+	if (pagesOpened.length === 0) {
+		return
+	}
+
 	const plural = pagesOpened.length > 1
 
 	const title = `Snoozify woke up ${plural ? 'pages' : 'a page'}`
