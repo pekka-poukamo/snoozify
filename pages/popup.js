@@ -25,6 +25,23 @@ const initializeTomorrowButton = () => {
 	.addEventListener('click', getSnoozeButtonFunction(new Date(Date.now() + 60*60*24*1000)))
 }
 
+const initializeTestButton = () => {
+	const weekDayFormatOptions = {weekday: 'long'}
+	const dateFormatOptions = {day: 'numeric', month: 'short'}
+
+	const buttonContainer = document.querySelector('#special-buttons')
+	const buttonTemplate = document.querySelector('#datebutton').content
+	const button = buttonTemplate.cloneNode(true)
+
+	const now = new Date()
+	button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(now)
+	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(now)
+	button.firstElementChild.id = 'test-button'
+
+	buttonContainer.appendChild(button)
+	document.querySelector('#test-button').addEventListener('click', getSnoozeButtonFunction(now))
+}
+
 const getSnoozeButton = buttonTemplate => weekday => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
@@ -40,8 +57,6 @@ const getSnoozeButton = buttonTemplate => weekday => {
 
 	return button
 }
-
-
 
 const getSnoozeButtonFunction = date => async () => {
 	date.setHours(8, 0, 0, 0)
@@ -60,6 +75,7 @@ const getSnoozeButtonFunction = date => async () => {
 document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
 	initializeTomorrowButton()
+	initializeTestButton()
 
 	document.addEventListener('keydown', event => {
 		if (event.key === 'Shift') {
