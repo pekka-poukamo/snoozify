@@ -5,7 +5,7 @@ const alarmName = 'Snoozify scheduler'
 
 chrome.alarms.create(alarmName, {
 	delayInMinutes: 0,
-	periodInMinutes: 1,
+	periodInMinutes: 2, // Set longer than a minute period to prevent race conditions when opening browser for the first time
 })
 
 chrome.alarms.onAlarm.addListener(alarm => {
