@@ -46,7 +46,7 @@ export const openPagesDueBy = date => {
 				url: page.url
 			})
 		})
-
+		
 		const currentDate = (new Date).toISOString()
 
 		snoozedPages.forEach(page => {
@@ -55,7 +55,7 @@ export const openPagesDueBy = date => {
 			}
 		})
 
-		return Storage.setSnoozedPages(snoozedPages).then(Promise.resolve(pagesDue))
+		return Storage.setSnoozedPages(snoozedPages).then(() => Promise.resolve(pagesDue))
 	})
 }
 

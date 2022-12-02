@@ -1,4 +1,5 @@
 import { openPagesDueBy } from '/scripts/snoozer.js'
+import { trace } from '/scripts/utils.js'
 
 const alarmName = 'Snoozify scheduler'
 
@@ -11,23 +12,22 @@ chrome.alarms.onAlarm.addListener(alarm => {
 	if (alarm.name === alarmName) {
 		console.log('Snoozify alarm', alarm)
 		openPagesDueBy(new Date())
-		.then(launchPageOpenNotifcation)
+		.then(launchPageOpenNotification)
 	}
 })
 
-const launchPageOpenNotifcation = pagesOpened => {
+const launchPageOpenNotification = pagesOpened => {
 	if (pagesOpened.length === 0) {
 		return
 	}
 
 	const plural = pagesOpened.length > 1
-
 	const title = `Snoozify woke up ${plural ? 'pages' : 'a page'}`
 	const message = plural ? `${pagesOpened.length} pages` : `${pagesOpened[0].title}.`
 
 	chrome.notifications.create({
 		title, message,
-		iconUrl: '/assets/icon.png',
+		iconUrl: '/assets/icon-128.png',
 		type: 'basic',
 		silent: true,
 	})
