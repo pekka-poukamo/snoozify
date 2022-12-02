@@ -1,4 +1,5 @@
 import { snoozePages } from '/scripts/snoozer.js'
+import { testing } from '/scripts/testing.js'
 import Storage from '/scripts/storage.js'
 import {
 	getUID,
@@ -76,7 +77,10 @@ const getSnoozeButtonFunction = date => async () => {
 document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
 	initializeTomorrowButton()
-	initializeTestButton()
+	
+	if (testing) {
+		initializeTestButton()
+	}
 
 	document.addEventListener('keydown', event => {
 		if (event.key === 'Shift') {

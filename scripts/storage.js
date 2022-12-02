@@ -1,5 +1,6 @@
-const testEnvironment = false // Set to true to use testing data instead of production data
-const storageKey = testEnvironment ? 'snoozedPages_test' : 'snoozedPages'
+import { testing } from '/scripts/testing.js'
+
+const storageKey = testing ? 'snoozedPages_test' : 'snoozedPages'
 
 const clearSnoozedPages = () => chrome.storage.sync.set({storageKey: []})
 
@@ -13,7 +14,6 @@ const getSnoozedPages = () => {
 				if (chrome.runtime.lastError) {
 					reject(chrome.runtime.lastError)
 				}
-				console.log('getSnoozedPages', result)
 				resolve(result[storageKey])
 			})
 		} catch (error) {
