@@ -70,6 +70,7 @@ const getSnoozeButtonFunction = date => async () => {
 	
 	snoozePages(pages)
 	.then(result => chrome.tabs.remove(tabs.map(tab => tab.id)))
+	.catch(error => console.error('Snoozing pages failed', error))
 }
 
 document.addEventListener("DOMContentLoaded", () => {
