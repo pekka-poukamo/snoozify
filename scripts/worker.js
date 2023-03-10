@@ -3,16 +3,26 @@ import { trace } from '/scripts/utils.js'
 
 const alarmName = 'Snoozify scheduler'
 
+let pageLaunchInProgress = false
+
 chrome.alarms.create(alarmName, {
 	delayInMinutes: 0,
-	periodInMinutes: 2, // Set longer than a minute period to prevent race conditions when opening browser for the first time
+	periodInMinutes: 1,
 })
 
 chrome.alarms.onAlarm.addListener(alarm => {
-	if (alarm.name === alarmName) {
+if (alarm.name === alarmName && !pageLaunchInProgress) {
 		console.log('Snoozify alarm', alarm)
+		pageLaunchInProgress = true;
 		openPagesDueBy(new Date())
-		.then(launchPageOpenNotification)
+		.then(pagesOpened => {
+			launchPageOpenNotification(pagesOpened)
+			pageLaunchInProgress = false
+		})
+		.catch(error => {
+			pageLaunchInProgress = false
+			return Promise.reject(error)
+		})
 	}
 })
 
