@@ -26,6 +26,32 @@ const initializeTomorrowButton = () => {
 	.addEventListener('click', getSnoozeButtonFunction(new Date(Date.now() + 60*60*24*1000)))
 }
 
+const initializeMonthButton = (options = {}) => {
+	document.querySelector('#month-button')?.remove()
+
+	const weekDayFormatOptions = {weekday: 'long'}
+	const dateFormatOptions = {day: 'numeric', month: 'short'}
+
+	const buttonContainer = document.querySelector('#special-buttons')
+	const buttonTemplate = document.querySelector('#datebutton').content
+	const button = buttonTemplate.cloneNode(true)
+
+	const date = new Date()
+	date.setDate(date.getDate() + 28 + (options.additionalMonth ? 28 : 0)) // 4 (or 8) weeks in future
+
+	if (date.getDay() !== 1) {
+		let daysUntilNextMonday = (day > 1) ? (8 - day) : (1 - day);
+		date.setDate(date.getDate() + daysUntilNextMonday)
+	}
+
+	button.querySelector('.datebutton__weekday').textContent = options.additionalMonth ? 'In two months' : 'In a month'
+	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(date)
+	button.firstElementChild.id = 'month-button'
+
+	buttonContainer.appendChild(button)
+	document.querySelector('#month-button').addEventListener('click', getSnoozeButtonFunction(date))
+}
+
 const initializeTestButton = () => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
@@ -35,7 +61,7 @@ const initializeTestButton = () => {
 	const button = buttonTemplate.cloneNode(true)
 
 	const now = new Date()
-	button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(now)
+	button.querySelector('.datebutton__weekday').textContent = 'Testing — ' + new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(now)
 	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(now)
 	button.firstElementChild.id = 'test-button'
 
@@ -77,6 +103,7 @@ const getSnoozeButtonFunction = date => async () => {
 document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
 	initializeTomorrowButton()
+	initializeMonthButton()
 	
 	if (testing) {
 		initializeTestButton()
@@ -85,12 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	document.addEventListener('keydown', event => {
 		if (event.key === 'Shift') {
 			initializeWeekDayButtons({additionalWeek: true})
+			initializeMonthButton({additionalMonth: true})
 		}
 	})
 
 	document.addEventListener('keyup', event => {
 		if (event.key === 'Shift') {
 			initializeWeekDayButtons({additionalWeek: false})
+			initializeMonthButton({additionalMonth: false})
 		}
 	})
 })
