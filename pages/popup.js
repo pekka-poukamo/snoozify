@@ -1,6 +1,8 @@
 import { snoozePages } from '/scripts/snoozer.js'
 import { testing } from '/scripts/testing.js'
-import Storage from '/scripts/storage.js'
+
+import MigrationScript from '/scripts/migrationScript.js'
+import Storage from '/scripts/storageNew.js'
 import {
 	getUID,
 	trace,
@@ -97,7 +99,11 @@ const getSnoozeButtonFunction = date => async () => {
 	}))
 	
 	snoozePages(pages)
-	.then(result => chrome.tabs.remove(tabs.map(tab => tab.id)))
+	.then(result => {
+		if (!testing) {
+			chrome.tabs.remove(tabs.map(tab => tab.id))
+		}
+	})
 	.catch(error => console.error('Snoozing pages failed', error))
 }
 

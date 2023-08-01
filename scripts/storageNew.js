@@ -101,29 +101,37 @@ const removePagesByUIDs = uids => {
 // Function to snooze a list of pages
 const snoozePages = pages => {
   return new Promise((resolve, reject) => {
-    // Group pages by wakeUpDate
-    const datesMap = pages.reduce((acc, page) => {
-      const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
-      acc[key] = acc[key] || [];
-      acc[key].push({
-        page_title: page.title,
-        page_url: page.url,
-        page_hash: page.id,
-      });
-      return acc;
-    }, {});
+    getSnoozedPages()
+      .then(existingPages => {
+        // Combine existing snoozed pages with new ones
+        const combinedPages = existingPages.concat(pages);
 
-    const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
-    const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+        // Group pages by wakeUpDate
+        const datesMap = combinedPages.reduce((acc, page) => {
+          const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
+          acc[key] = acc[key] || [];
+          acc[key].push({
+            page_title: page.title,
+            page_url: page.url,
+            page_hash: page.uid, // Using uid instead of id
+          });
+          return acc;
+        }, {});
 
-    chrome.storage.sync.set(queryObject, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      }
-      resolve();
-    });
+        const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
+        const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+
+        chrome.storage.sync.set(queryObject, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          }
+          resolve();
+        });
+      })
+      .catch(error => reject(error));
   });
 };
+
 
 export default {
   clearSnoozedPages,

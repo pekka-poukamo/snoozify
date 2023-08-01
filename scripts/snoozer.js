@@ -1,4 +1,4 @@
-import Storage from './storage.js'
+import Storage from './storageNew.js'
 import { getUID } from './utils.js'
 
 export const snoozePages = pages => {
