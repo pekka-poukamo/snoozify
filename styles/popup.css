@@ -11,12 +11,14 @@ body {
 	padding: 2rem 1.5rem;
 	margin: 0 0 auto 0;
 	color: var(--text-color);
+	font-family: 'Lora', system-ui;
 }
 
 button {
 	width: 100%;
 	height: 2.5rem;
 	margin-bottom: 0.5rem;
+	font-family: 'Lora', system-ui;
 }
 
 h1, h2, h3, h4 {
@@ -24,12 +26,12 @@ h1, h2, h3, h4 {
 }
 
 h1 {
-	font-weight: 900;
+	font-weight: 400;
 	font-size: 1.25rem;
-	letter-spacing: 0.28em;
+/*	letter-spacing: 0.28em;*/
 	text-align: center;
-	text-transform: uppercase;
-	font-family: 'SF Pro Display';
+/*	text-transform: uppercase;*/
+	font-family: 'Bitter', serif;
 }
 
 #page-links {

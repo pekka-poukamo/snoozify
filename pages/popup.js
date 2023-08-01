@@ -40,6 +40,7 @@ const initializeMonthButton = (options = {}) => {
 	date.setDate(date.getDate() + 28 + (options.additionalMonth ? 28 : 0)) // 4 (or 8) weeks in future
 
 	if (date.getDay() !== 1) {
+		const day = date.getDay()
 		let daysUntilNextMonday = (day > 1) ? (8 - day) : (1 - day);
 		date.setDate(date.getDate() + daysUntilNextMonday)
 	}
