@@ -6,16 +6,14 @@ export const snoozePages = pages => {
 		return Promise.reject('No pages to snooze')
 	}
 
-	return Storage.getSnoozedPages().then(snoozedPages => {
-		pages.forEach(page => snoozedPages.push({
-			id: getUID(),
-			wakeUpDate: page.wakeUpDate.toISOString(),
-			title: page.title,
-			url: page.url,
-		}))
-
-		return Storage.setSnoozedPages(snoozedPages)
+	const storagePages = pages.map(page => {
+		return {
+			...page,
+			uid: getUID()
+		}
 	})
+
+	return Storage.snoozePages(storagePages)
 }
 
 export const openPageById = id => {
@@ -26,9 +24,12 @@ export const openPageById = id => {
 			return Promise.reject(`No snoozed page exists with id ${id}`)
 		}
 
-		chrome.tabs.create({
-			url: page.url
-		})	
+		return Storage.removePagesByUIDs([id]).then(() => {
+			chrome.tabs.create({
+				url: page.url
+			})	
+			return Promise.resolve(id)
+		})
 	})
 }
 
@@ -47,15 +48,7 @@ export const openPagesDueBy = date => {
 			})
 		})
 		
-		const currentDate = (new Date).toISOString()
-
-		snoozedPages.forEach(page => {
-			if (pagesDue.find(duePage => duePage.id === page.id)) {
-				page.openedDate = currentDate
-			}
-		})
-
-		return Storage.setSnoozedPages(snoozedPages).then(() => Promise.resolve(pagesDue))
+		return Storage.removePagesByUIDs(pagesDue.map(page => page.uid)).then(() => Promise.resolve(pagesDue))
 	})
 }
 

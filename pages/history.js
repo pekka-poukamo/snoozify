@@ -24,6 +24,7 @@ const getPageElement = page => {
 	const pageLink = document.querySelector('#page-link-template').content.cloneNode(true)
 	const dateFormatOptions = {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: false}
 
+	console.log(page)
 	pageLink.querySelector('.page-link__url').href = page.url
 	pageLink.querySelector('.page-link__title').textContent = page.title
 	pageLink.querySelector('.page-link__wakeupdate').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(new Date(page.wakeUpDate))
@@ -33,7 +34,6 @@ const getPageElement = page => {
 
 const getWakeupButtonFunction = id => async () => {
 	openPageById(id)
-	Storage.setPageValue(id, 'openedDate', (new Date().toISOString()))
 }
 
 /* Run the extension */
