@@ -12,11 +12,34 @@ const initializeHistory = () => {
 			pageLinksElement.innerHTML = 'No snoozed pages yet.'
 		}
 
-		snoozedPages
-		.sort(byDate)
-		.filter(page => page.openedDate === undefined)
-		.map(getPageElement)
-		.forEach(pageLink => pageLinksElement.appendChild(pageLink))
+		const sortedPages = snoozedPages.sort(byDate)
+		const groupedPages = sortedPages.reduce((groups, page) => {
+			const date = new Date(page.wakeUpDate).toISOString().split('T')[0]
+			if (!groups[date]) {
+				groups[date] = []
+			}
+			groups[date].push(page)
+			return groups
+		}, {})
+
+		Object.entries(groupedPages)
+		.forEach(([unformattedDate, pages], index) => {
+			const formattedDate = new Date(unformattedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+			const dateGroup = document.querySelector('#date-group-template').content.cloneNode(true)
+			dateGroup.querySelector('.date-group__date-text').textContent = formattedDate
+			dateGroup.querySelector('.date-group__count').textContent = `${pages.length}`
+			const pagesElement = dateGroup.querySelector('.date-group__pages')
+			pages
+			.filter(page => page.openedDate === undefined)
+			.map(getPageElement)
+			.forEach(pageLink => pagesElement.appendChild(pageLink))
+
+			if (new Date(unformattedDate).getDay() === 1 && index !== 0) {
+				dateGroup.querySelector('h2').classList.add('date-group--monday')
+			}
+
+			pageLinksElement.appendChild(dateGroup)
+		})
 	})
 }
 

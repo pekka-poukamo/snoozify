@@ -8,7 +8,7 @@
 	<script src="history.js" type="module"></script>
 </head>
 <body>
-	<h4><a href="popup.html"><—</a> snoozify</h4>
+	<h4><a href="popup.html">← snoozify</a></h4>
 	<h1>snoozified pages</h1>
 
 	<div id="page-links">
@@ -16,6 +16,14 @@
 	</div>
 
 	<button id="clear-button">Clear all</button>
+
+	<template id="date-group-template">
+		<h2 class="date-group__date">
+			<span class="date-group__date-text"></span>
+			<span class="date-group__count"></span>
+		</h2>
+		<div class="date-group__pages"></div>
+	</template>
 
 	<template id="page-link-template">
 		<div class="page-link">
