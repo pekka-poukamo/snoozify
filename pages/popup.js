@@ -1,8 +1,6 @@
 import { snoozePages } from '/scripts/snoozer.js'
 import { testing } from '/scripts/testing.js'
-
-import MigrationScript from '/scripts/migrationScript.js'
-import Storage from '/scripts/storageNew.js'
+import Storage from '/scripts/storage.js'
 import {
 	getUID,
 	trace,

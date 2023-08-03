@@ -1,4 +1,4 @@
-import Storage from '/scripts/storageNew.js'
+import Storage from '/scripts/storage.js'
 import { byDate } from '/scripts/utils.js'
 import { openPageById } from '/scripts/snoozer.js'
 

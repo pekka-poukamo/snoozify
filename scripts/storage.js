@@ -1,105 +1,141 @@
 import { testing } from '/scripts/testing.js'
 
-const storageKey = testing ? 'snoozedPages_test' : 'snoozedPages'
+// Constants for keys
+let SNOOZIFY_DATES_KEY = 'snoozify_dates';
+let SNOOZIFY_DATE_PREFIX = 'snoozify_';
 
-
-/*
-Plan for new data structure.
-
-Goals:
-- Minimize size of each API call to below 8kb
-- Minimize size of total storage under 102,4kB
-- Provide scalability to dozens/hundreds of sleeping tabs
-- Minimize amount of API calls to under 1800/h and 120/min
-- Minimize the amount of items in db to under 512
-
-snoozify_dates = [
-	'20230816'
-] // array of possible dates, probably isostring
-
-for each date in the list:
-~100B each page for date -> call limit ~80 per date
-snoozify_20230816 = [
-	{
-		page_title: 'Provide scalability to dozens/hundreds of sleeping tabs',
-		page_hash: 123456	
-	}
-] // array of all pages to be woken up on that day
-
-For each page:
-an object to contain all of the relevant metadata 
-(~350B each, total storage supports max ~300 of these objects)
-snoozify_page_123456 = {
-	page_title: 'Provide scalability to dozens/hundreds of sleeping tabs',
-	page_url: 'Provide scalability to dozens/hundreds of sleeping tabs' // Trim URLs to be short?
-	page_hash: 123456,
-	last_wake: date,
-	num_snoozes: 1,
-	snooze_period: 30 days
-} // 
-
-*/
-
-
-const clearSnoozedPages = () => chrome.storage.sync.set({storageKey: []})
-
-const getSnoozedPages = () => {
-	return new Promise((resolve, reject) => {
-		try {
-			const queryObject = {}
-			queryObject[storageKey] = [] // Set default value to empty array
-
-			chrome.storage.sync.get(queryObject, result => {
-				if (chrome.runtime.lastError) {
-					reject(chrome.runtime.lastError)
-				}
-				resolve(result[storageKey])
-			})
-		} catch (error) {
-			reject(error)
-		}
-		
-	})
+if (testing) {
+  SNOOZIFY_DATES_KEY += '_testing'
+  SNOOZIFY_DATE_PREFIX += '_testing'
 }
 
-const setSnoozedPages = snoozedPages => {
-	return new Promise((resolve, reject) => {
-		try {
-			/* TODO
-				Filter pages to limit the size of store operation. As a side effect, loses history.
-				Still has an issue that after 25-35 items the store operation fails because of message size exceeding ~8kb
-				Need to figure out a way to store larger amount of items. Compression? Lookup tables for metavalues?
-			*/
-			const filteredPages = snoozedPages.filter(page => page.openedDate === undefined) 
-			
-			const queryObject = {}
-			queryObject[storageKey] = filteredPages // Set default value to empty array
+// Function to clear all snoozed pages data
+const clearSnoozedPages = () => {
+  // Clear all related keys
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(keys => {
+      const keysToDelete = Object.keys(keys).filter(key => key.startsWith(SNOOZIFY_DATE_PREFIX) || key === SNOOZIFY_DATES_KEY);
+      chrome.storage.sync.remove(keysToDelete, () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        }
+        resolve();
+      });
+    });
+  });
+};
 
-			chrome.storage.sync.set(queryObject, result => {
-				if (chrome.runtime.lastError) {
-					reject(chrome.runtime.lastError)
-				}
+// Function to get all snoozed pages or snoozed pages for a specific date
+const getSnoozedPages = (date = null) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(SNOOZIFY_DATES_KEY, result => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+        return;
+      }
 
-				resolve(result)
-			})
-		} catch (error) {
-			reject(error)
-		}
-	})
-}
+      const dates = result[SNOOZIFY_DATES_KEY] || [];
+      const keys = date ? [SNOOZIFY_DATE_PREFIX + date] : dates.map(date => SNOOZIFY_DATE_PREFIX + date);
 
-const setPageValue = (id, field, value) => {
-	return getSnoozedPages().then(snoozedPages => {
-		const page = snoozedPages.find(page => page.id === id);
-		page[field] = value
+      chrome.storage.sync.get(keys, pagesResult => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+          return;
+        }
 
-		return setSnoozedPages(snoozedPages)
-	})
-}
+        const snoozedPages = [];
+        keys.forEach(key => {
+          const wakeUpDate = key.replace(SNOOZIFY_DATE_PREFIX, '');
+          (pagesResult[key] || []).forEach(page => {
+            // Transform the page object to the desired format
+            snoozedPages.push({
+              title: page.page_title,
+              url: page.page_url,
+              uid: page.page_hash,
+              wakeUpDate: wakeUpDate,
+            });
+          });
+        });
+
+        resolve(snoozedPages);
+      });
+    });
+  });
+};
+
+// Function to remove a snoozed page by UID
+const removePagesByUIDs = uids => {
+  return new Promise((resolve, reject) => {
+    getSnoozedPages()
+      .then(snoozedPages => {
+        // Filter out the pages with the specified UIDs
+        const updatedPages = snoozedPages.filter(page => !uids.includes(page.uid));
+
+        // Group pages by wakeUpDate
+        const datesMap = updatedPages.reduce((acc, page) => {
+          const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
+          acc[key] = acc[key] || [];
+          acc[key].push({
+            page_title: page.title,
+            page_url: page.url,
+            page_hash: page.uid,
+          });
+          return acc;
+        }, {});
+
+        const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
+        const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+
+        chrome.storage.sync.set(queryObject, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          }
+          resolve();
+        });
+      })
+      .catch(error => reject(error));
+  });
+};
+
+
+// Function to snooze a list of pages
+const snoozePages = pages => {
+  return new Promise((resolve, reject) => {
+    getSnoozedPages()
+      .then(existingPages => {
+        // Combine existing snoozed pages with new ones
+        const combinedPages = existingPages.concat(pages);
+
+        // Group pages by wakeUpDate
+        const datesMap = combinedPages.reduce((acc, page) => {
+          const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
+          acc[key] = acc[key] || [];
+          acc[key].push({
+            page_title: page.title,
+            page_url: page.url,
+            page_hash: page.uid, // Using uid instead of id
+          });
+          return acc;
+        }, {});
+
+        const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
+        const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+
+        chrome.storage.sync.set(queryObject, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          }
+          resolve();
+        });
+      })
+      .catch(error => reject(error));
+  });
+};
+
 
 export default {
-	clearSnoozedPages,
-	getSnoozedPages,
-	setSnoozedPages,
-	setPageValue,
-}
+  clearSnoozedPages,
+  getSnoozedPages,
+  removePagesByUIDs,
+  snoozePages,
+};
