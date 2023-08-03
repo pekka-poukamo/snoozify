@@ -63,6 +63,30 @@ const getSnoozedPages = (date = null) => {
   });
 };
 
+// Function to get the count of snoozed pages for a specific date (ignoring time)
+const getSnoozedPageCount = (dateString) => {
+  return new Promise((resolve, reject) => {
+    let date = new Date(dateString); // convert the dateString to a Date object
+
+    getSnoozedPages()
+      .then(snoozedPages => {
+        // Filter pages to include only those that match the specified date (ignoring time)
+        const matchingPages = snoozedPages.filter(page => {
+          const pageDate = new Date(page.wakeUpDate);
+          return pageDate.getFullYear() === date.getFullYear()
+            && pageDate.getMonth() === date.getMonth()
+            && pageDate.getDate() === date.getDate();
+        });
+
+        resolve(matchingPages.length);
+      })
+      .catch(error => reject(error));
+  });
+};
+
+
+
+
 // Function to remove a snoozed page by UID
 const removePagesByUIDs = uids => {
   return new Promise((resolve, reject) => {
@@ -136,6 +160,7 @@ const snoozePages = pages => {
 export default {
   clearSnoozedPages,
   getSnoozedPages,
+  getSnoozedPageCount,
   removePagesByUIDs,
   snoozePages,
 };

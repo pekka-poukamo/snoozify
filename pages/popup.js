@@ -13,28 +13,37 @@ import {
 
 const initializeWeekDayButtons = (options = {}) => {
 	const buttonContainer = document.querySelector('#buttons')
-	buttonContainer.innerHTML = ''
 
-	getNextWeekdaysFromToday({additionalWeek: options.additionalWeek})
-	.map(getSnoozeButton(document.querySelector('#datebutton').content))
-	.forEach(button => buttonContainer.appendChild(button))
-	Array.from(document.querySelector('#buttons').children).forEach(child => child.addEventListener('click', getSnoozeButtonFunction(new Date(child.value))))
+	Promise.all(
+		getNextWeekdaysFromToday({additionalWeek: options.additionalWeek})
+		.map(date => getSnoozeButton(document.querySelector('#datebutton').content)(date))
+		)
+	.then(buttonElements => {
+		buttonContainer.innerHTML = ''
+		buttonElements.forEach(fragment => {
+			const button = fragment.querySelector('button');
+			buttonContainer.appendChild(fragment);
+			button.addEventListener('click', getSnoozeButtonFunction(new Date(button.value)));
+			console.log(button)
+		});
+	})
 }
+
+
 
 const initializeTomorrowButton = () => {
-	document.querySelector('#tomorrow-button')
-	.addEventListener('click', getSnoozeButtonFunction(new Date(Date.now() + 60*60*24*1000)))
+	const tomorrow = new Date(Date.now() + 60*60*24*1000);
+	getSnoozeButton(document.querySelector('#datebutton').content)(tomorrow)
+	.then(button => {
+		button.addEventListener('click', getSnoozeButtonFunction(tomorrow));
+		document.querySelector('#tomorrow-button').replaceWith(button);
+	});
 }
 
-const initializeMonthButton = (options = {}) => {
-	document.querySelector('#month-button')?.remove()
-
-	const weekDayFormatOptions = {weekday: 'long'}
-	const dateFormatOptions = {day: 'numeric', month: 'short'}
+const initializeMonthButton = async (options = {}) => {
 
 	const buttonContainer = document.querySelector('#special-buttons')
 	const buttonTemplate = document.querySelector('#datebutton').content
-	const button = buttonTemplate.cloneNode(true)
 
 	const date = new Date()
 	date.setDate(date.getDate() + 28 + (options.additionalMonth ? 28 : 0)) // 4 (or 8) weeks in future
@@ -45,13 +54,19 @@ const initializeMonthButton = (options = {}) => {
 		date.setDate(date.getDate() + daysUntilNextMonday)
 	}
 
-	button.querySelector('.datebutton__weekday').textContent = options.additionalMonth ? 'In two months' : 'In a month'
-	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(date)
-	button.firstElementChild.id = 'month-button'
+	const button = getSnoozeButton(buttonTemplate)(date)
 
-	buttonContainer.appendChild(button)
-	document.querySelector('#month-button').addEventListener('click', getSnoozeButtonFunction(date))
+	Promise.resolve(button)
+	.then(buttonElement => {
+		buttonElement.firstElementChild.id = 'month-button'
+		buttonElement.firstElementChild.classList.remove('future-week')
+		document.querySelector('#month-button')?.remove()
+		buttonContainer.appendChild(buttonElement)
+		document.querySelector('#month-button').addEventListener('click', getSnoozeButtonFunction(date))
+	})
 }
+
+
 
 const initializeTestButton = () => {
 	const weekDayFormatOptions = {weekday: 'long'}
@@ -73,18 +88,22 @@ const initializeTestButton = () => {
 const getSnoozeButton = buttonTemplate => weekday => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
+	return Storage.getSnoozedPageCount(weekday.toISOString())
+	.then(count => {
+		const button = buttonTemplate.cloneNode(true)
 
-	const button = buttonTemplate.cloneNode(true)
+		button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
+		button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
+		button.querySelector('.datebutton__count').textContent = `${count}` // Add this line
+		button.children[0].setAttribute('value', weekday.toISOString())
+		if (!datesSameWeek(weekday, new Date())) {
+			button.children[0].classList.add('future-week')
+		}
 
-	button.querySelector('.datebutton__weekday').textContent = new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(weekday)
-	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(weekday)
-	button.children[0].setAttribute('value', weekday.toISOString())
-	if (!datesSameWeek(weekday, new Date())) {
-		button.children[0].classList.add('future-week')
-	}
-
-	return button
+		return button
+	})
 }
+
 
 const getSnoozeButtonFunction = date => async () => {
 	date.setHours(8, 0, 0, 0)
@@ -98,9 +117,7 @@ const getSnoozeButtonFunction = date => async () => {
 	
 	snoozePages(pages)
 	.then(result => {
-		if (!testing) {
-			chrome.tabs.remove(tabs.map(tab => tab.id))
-		}
+		chrome.tabs.remove(tabs.map(tab => tab.id))
 	})
 	.catch(error => console.error('Snoozing pages failed', error))
 }
