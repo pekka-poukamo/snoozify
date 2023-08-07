@@ -20,19 +20,9 @@ This is FYI-style open source. I'm sharing it for interested parties, but withou
 
 There's no commitment to working on or publishing these todo items.
 
-- !CRITICAL! With current implementation, there's a practical limit to amount of tabs that can be snoozed: 
-	
-	> Snoozing pages failed {message: 'QUOTA_BYTES_PER_ITEM quota exceeded'}
-
-	This would require refactoring the storage to support incremental updates or smaller byte size for the storage message
-
-
 - Tests
 - Add settings & time controls (e.g. wake up at 8:00)
 - Styling & visual design
 - "Later"-button
 	- Only weekdays option
-- Figure out long term solution for storage (limit the size of store messages)
 
-## Design ideas
-- https://randoma11y.com/
