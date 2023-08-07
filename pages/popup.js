@@ -24,18 +24,17 @@ const initializeWeekDayButtons = (options = {}) => {
 			const button = fragment.querySelector('button');
 			buttonContainer.appendChild(fragment);
 			button.addEventListener('click', getSnoozeButtonFunction(new Date(button.value)));
-			console.log(button)
 		});
 	})
 }
 
-
-
 const initializeTomorrowButton = () => {
 	const tomorrow = new Date(Date.now() + 60*60*24*1000);
 	getSnoozeButton(document.querySelector('#datebutton').content)(tomorrow)
-	.then(button => {
+	.then(buttonElement => {
+		const button = buttonElement.querySelector('button')
 		button.addEventListener('click', getSnoozeButtonFunction(tomorrow));
+		button.setAttribute('id', '#tomorrow-button')
 		document.querySelector('#tomorrow-button').replaceWith(button);
 	});
 }
