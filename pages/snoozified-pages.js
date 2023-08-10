@@ -60,6 +60,23 @@ const getWakeupButtonFunction = id => async () => {
 
 /* Run the extension */
 
+const isValidSnoozifiedPage = page => {
+	// You can expand this based on the properties you expect
+	return page &&
+	typeof page.title === 'string' &&
+	typeof page.url === 'string' &&
+	typeof page.uid === 'string' &&
+	typeof page.wakeUpDate === 'string';  // assuming wakeUpDate is a string in ISO format
+};
+
+const validateImportedData = data => {
+	if (!Array.isArray(data)) {
+		return false;
+	}
+	return data.every(isValidSnoozifiedPage);
+};
+
+
 document.addEventListener("DOMContentLoaded", () => {
 	initializeHistory()
 
@@ -67,4 +84,44 @@ document.addEventListener("DOMContentLoaded", () => {
 		Storage.clearSnoozedPages()
 		initializeHistory()
 	})
+
+	document.querySelector('#export-button').addEventListener('click', () => {
+		Storage.getSnoozedPages().then(snoozedPages => {
+			const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snoozedPages));
+			const downloadAnchorNode = document.createElement('a');
+			downloadAnchorNode.setAttribute("href", dataStr);
+			downloadAnchorNode.setAttribute("download", "snoozified_pages_export.json");
+			document.body.appendChild(downloadAnchorNode); 
+			downloadAnchorNode.click();
+			downloadAnchorNode.remove();
+		});
+	});
+
+	document.querySelector('#import-button').addEventListener('click', () => {
+		document.querySelector('#import-file-input').click();
+	});
+
+	document.querySelector('#import-file-input').addEventListener('change', event => {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				try {
+					const importedData = JSON.parse(e.target.result);
+
+					if (!validateImportedData(importedData)) {
+						console.error("Invalid data structure");
+						return;
+					}
+
+					Storage.importSnoozifiedPages(importedData).then(() => {
+						initializeHistory(); // Reload the history
+					});
+				} catch (error) {
+					console.error("Error parsing JSON", error);
+				}
+			};
+			reader.readAsText(file);
+		}
+	});
 })
