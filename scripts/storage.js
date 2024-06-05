@@ -86,44 +86,44 @@ const getSnoozedPageCount = (dateString) => {
 };
 
 const importSnoozifiedPages = (importedPages) => {
-    return new Promise(async (resolve, reject) => {
-        const existingPages = await getSnoozedPages();
-        const existingUIDs = new Set(existingPages.map(page => page.uid));
+  return new Promise(async (resolve, reject) => {
+    const existingPages = await getSnoozedPages();
+    const existingUIDs = new Set(existingPages.map(page => page.uid));
 
         // Process the imported pages
-        importedPages.forEach(page => {
-            while (existingUIDs.has(page.uid)) {
-                page.uid = getUID();
-            }
-            existingUIDs.add(page.uid); 
-        });
+    importedPages.forEach(page => {
+      while (existingUIDs.has(page.uid)) {
+        page.uid = getUID();
+      }
+      existingUIDs.add(page.uid); 
+    });
 
         // Combine existing pages with the imported pages
-        const combinedPages = [...existingPages, ...importedPages];
+    const combinedPages = [...existingPages, ...importedPages];
 
         // Format the combined data for storage
-        const datesMap = combinedPages.reduce((acc, page) => {
-            const key = SNOOZIFY_DATE_PREFIX + new Date(page.wakeUpDate).toISOString().split('T')[0];
-            acc[key] = acc[key] || [];
-            acc[key].push({
-                page_title: page.title,
-                page_url: page.url,
-                page_hash: page.uid,
-            });
-            return acc;
-        }, {});
+    const datesMap = combinedPages.reduce((acc, page) => {
+      const key = SNOOZIFY_DATE_PREFIX + new Date(page.wakeUpDate).toISOString().split('T')[0];
+      acc[key] = acc[key] || [];
+      acc[key].push({
+        page_title: page.title,
+        page_url: page.url,
+        page_hash: page.uid,
+      });
+      return acc;
+    }, {});
 
-        const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
-        const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+    const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
+    const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
 
         // Store the transformed data back into Chrome storage
-        chrome.storage.sync.set(queryObject, () => {
-            if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-            }
-            resolve();
-        });
+    chrome.storage.sync.set(queryObject, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      }
+      resolve();
     });
+  });
 };
 
 // Function to remove a snoozed page by UID
@@ -149,14 +149,35 @@ const removePagesByUIDs = uids => {
       const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
       const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
 
+        // Prepare keys to delete (dates that have no pages left)
+      const keysToDelete = snoozedPages
+      .map(page => SNOOZIFY_DATE_PREFIX + page.wakeUpDate)
+      .filter(key => !datesMap[key]);
+
+        // Set new data and remove empty keys
       chrome.storage.sync.set(queryObject, () => {
         if (chrome.runtime.lastError) {
+          console.error('Storage Error:', chrome.runtime.lastError);
           reject(chrome.runtime.lastError);
+          return;
         }
-        resolve();
+
+          // Remove empty date-specific keys
+        chrome.storage.sync.remove(keysToDelete, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Storage Error:', chrome.runtime.lastError);
+            reject(chrome.runtime.lastError);
+            return;
+          }
+
+          resolve();
+        });
       });
     })
-    .catch(error => reject(error));
+    .catch(error => {
+      console.error('Get Snoozed Pages Error:', error);
+      reject(error);
+    });
   });
 };
 
@@ -195,6 +216,18 @@ const snoozePages = pages => {
   });
 };
 
+// background.js
+const calculateStorageSize = () => {
+  chrome.storage.sync.getBytesInUse(null, (bytes) => {
+    console.log(`Total storage used: ${bytes} bytes`);
+  });
+};
+
+const logSyncStorage = () => {
+  chrome.storage.sync.get(null, (items) => {
+    console.log('All sync storage items:', items);
+  });
+};
 
 export default {
   clearSnoozedPages,
@@ -203,4 +236,6 @@ export default {
   importSnoozifiedPages,
   removePagesByUIDs,
   snoozePages,
+  calculateStorageSize,
+  logSyncStorage
 };

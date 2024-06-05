@@ -33,6 +33,7 @@ const initializeTomorrowButton = () => {
 	getSnoozeButton(document.querySelector('#datebutton').content)(tomorrow)
 	.then(buttonElement => {
 		const button = buttonElement.querySelector('button')
+		button.querySelector('.datebutton__weekday').textContent = 'Tomorrow'
 		button.addEventListener('click', getSnoozeButtonFunction(tomorrow));
 		button.setAttribute('id', '#tomorrow-button')
 		document.querySelector('#tomorrow-button').replaceWith(button);
@@ -59,6 +60,7 @@ const initializeMonthButton = async (options = {}) => {
 	.then(buttonElement => {
 		buttonElement.firstElementChild.id = 'month-button'
 		buttonElement.firstElementChild.classList.remove('future-week')
+		buttonElement.querySelector('.datebutton__weekday').textContent = 'Later'
 		document.querySelector('#month-button')?.remove()
 		buttonContainer.appendChild(buttonElement)
 		document.querySelector('#month-button').addEventListener('click', getSnoozeButtonFunction(date))
@@ -113,7 +115,7 @@ const getSnoozeButtonFunction = date => async () => {
 		url: tab.url,
 		wakeUpDate: date,
 	}))
-	
+
 	snoozePages(pages)
 	.then(result => {
 		chrome.tabs.remove(tabs.map(tab => tab.id))

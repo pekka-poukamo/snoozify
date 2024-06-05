@@ -80,6 +80,8 @@ const validateImportedData = data => {
 document.addEventListener("DOMContentLoaded", () => {
 	initializeHistory()
 
+	Storage.calculateStorageSize()
+
 	document.querySelector('#clear-button').addEventListener('click', () => {
 		Storage.clearSnoozedPages()
 		initializeHistory()
