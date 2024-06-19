@@ -16,19 +16,22 @@ export const snoozePages = pages => {
 	return Storage.snoozePages(storagePages)
 }
 
-export const openPageById = id => {
+export const openPageById = uid => {
+	if (!uid) {
+		return Promise.reject('No uid provided')
+	}
 	return Storage.getSnoozedPages().then(snoozedPages => {
-		const page = snoozedPages.find(page => page.id === id);
+		const page = snoozedPages.find(page => page.uid === uid);
 
 		if (!page) {
-			return Promise.reject(`No snoozed page exists with id ${id}`)
+			return Promise.reject(`No snoozed page exists with uid ${uid}`)
 		}
 
-		return Storage.removePagesByUIDs([id]).then(() => {
+		return Storage.removePagesByUIDs([uid]).then(() => {
 			chrome.tabs.create({
 				url: page.url
 			})	
-			return Promise.resolve(id)
+			return Promise.resolve(uid)
 		})
 	})
 }
