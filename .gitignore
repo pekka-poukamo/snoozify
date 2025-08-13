@@ -1,1 +1,71 @@
+# OS
+.DS_Store
 */.DS_Store
+Thumbs.db
+Icon?
+.Spotlight-V100
+.Trashes
+
+# Node
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Build outputs
+build/
+dist/
+out/
+
+# Caches
+.cache/
+.tmp/
+.temp/
+.vite/
+.vitepress/cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_*/
+.tsbuildinfo
+
+# Test artifacts
+junit.xml
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+*.trace.zip
+
+# Editors/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Package archives
+*.tgz
+
+# Chrome extension packaging
+*.crx
+*.pem
+extension.zip
+
+# Misc
+coverage-final.json
