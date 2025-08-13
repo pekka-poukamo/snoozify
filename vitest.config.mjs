@@ -19,7 +19,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       reportsDirectory: path.resolve(__dirname, 'coverage'),
-      exclude: ['pages/**/*.html'],
+      include: ['scripts/**/*.js', 'pages/**/*.js'],
+      exclude: ['pages/**/*.html', 'tests/**'],
     },
   },
 })
