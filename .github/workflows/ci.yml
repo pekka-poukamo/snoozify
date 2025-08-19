@@ -16,10 +16,29 @@ jobs:
           cache: npm
       - run: npm install
       - run: npm run test:coverage
-      - name: Upload coverage HTML
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Generate coverage summary
+        id: cov
+        run: |
+          node -e "const s=require('./coverage/coverage-summary.json');const pct=x=>x.toFixed(2);const t=s.total;console.log(`| Metric | % |\n|---|---:|\n| Statements | ${pct(t.statements.pct)} |\n| Branches | ${pct(t.branches.pct)} |\n| Functions | ${pct(t.functions.pct)} |\n| Lines | ${pct(t.lines.pct)} |`);" > coverage_summary.md
+      - name: Find existing coverage comment
+        id: fc
+        uses: peter-evans/find-comment@v3
         with:
-          name: coverage-html
-          path: coverage
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Coverage Summary'
+      - name: Create or update coverage comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Coverage Summary
+
+            ```
+            ${{ github.sha }}
+            ```
+
+            $(cat coverage_summary.md)
+          edit-mode: replace
 
