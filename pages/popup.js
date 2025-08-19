@@ -35,7 +35,7 @@ const initializeTomorrowButton = () => {
 		const button = buttonElement.querySelector('button')
 		button.querySelector('.datebutton__weekday').textContent = 'Tomorrow'
 		button.addEventListener('click', getSnoozeButtonFunction(tomorrow));
-		button.setAttribute('id', '#tomorrow-button')
+		button.setAttribute('id', 'tomorrow-button')
 		document.querySelector('#tomorrow-button').replaceWith(button);
 	});
 }
