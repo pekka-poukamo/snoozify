@@ -30,7 +30,10 @@ export const getNextWeekdayFromDate = (date, weekday, options) => {
 	}
 
 	const newDate = new Date()
-	newDate.setUTCDate(date.getUTCDate() + daysToAdvance + (options.additionalWeek ? 7 : 0))
+	const extraDaysFromWeeks = options && typeof options.additionalWeeks === 'number'
+		? options.additionalWeeks * 7
+		: (options && options.additionalWeek ? 7 : 0)
+	newDate.setUTCDate(date.getUTCDate() + daysToAdvance + extraDaysFromWeeks)
 
 	return newDate;
 }
