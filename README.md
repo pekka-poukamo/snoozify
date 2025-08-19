@@ -1,5 +1,7 @@
 # Snoozify
 
+[![CI](https://github.com/pekka-poukamo/snoozify/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pekka-poukamo/snoozify/actions/workflows/ci.yml)
+
 A tool for snoozing tabs. Developed for personal use, out of frustration for existing tab snooze extensions.
 
 Hold shift to see the snooze options for following date.
