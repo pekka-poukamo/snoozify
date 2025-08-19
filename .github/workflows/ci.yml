@@ -23,7 +23,21 @@ jobs:
       - name: Generate coverage summary
         id: cov
         run: |
-          node -e "const s=require('./coverage/coverage-summary.json');const pct=x=>x.toFixed(2);const t=s.total;console.log(`| Metric | % |\n|---|---:|\n| Statements | ${pct(t.statements.pct)} |\n| Branches | ${pct(t.branches.pct)} |\n| Functions | ${pct(t.functions.pct)} |\n| Lines | ${pct(t.lines.pct)} |`);" > coverage_summary.md
+          node - <<'NODE'
+          const fs = require('fs');
+          const s = require('./coverage/coverage-summary.json');
+          const pct = (x) => x.toFixed(2);
+          const t = s.total;
+          const lines = [
+            '| Metric | % |',
+            '|---|---:|',
+            `| Statements | ${pct(t.statements.pct)} |`,
+            `| Branches | ${pct(t.branches.pct)} |`,
+            `| Functions | ${pct(t.functions.pct)} |`,
+            `| Lines | ${pct(t.lines.pct)} |`,
+          ];
+          fs.writeFileSync('coverage_summary.md', lines.join('\n'));
+          NODE
           printf "**Coverage Summary** for \`%s\`\n\n" "${GITHUB_SHA:0:7}" > pr_coverage_comment.md
           cat coverage_summary.md >> pr_coverage_comment.md
       - name: Find existing coverage comment
