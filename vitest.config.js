@@ -10,6 +10,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.js'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'html'],
     },
   },
