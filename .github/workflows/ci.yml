@@ -5,6 +5,10 @@ on:
   push:
     branches: [ main, master ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -23,12 +27,14 @@ jobs:
       - name: Find existing coverage comment
         id: fc
         uses: peter-evans/find-comment@v3
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body-includes: 'Coverage Summary'
       - name: Create or update coverage comment
         uses: peter-evans/create-or-update-comment@v4
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
