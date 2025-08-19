@@ -28,6 +28,14 @@ jobs:
           const s = require('./coverage/coverage-summary.json');
           const pct = (x) => x.toFixed(2);
           const t = s.total;
+          const ws = (process.env.GITHUB_WORKSPACE || process.cwd()).replace(/\\/g, '/');
+          const toRepoPath = (p) => {
+            const norm = String(p).replace(/\\/g, '/');
+            if (norm.startsWith(ws + '/')) return norm.slice(ws.length + 1);
+            const i = norm.indexOf('/workspace/');
+            if (i >= 0) return norm.slice(i + '/workspace/'.length);
+            return norm.replace(/^\.\//, '');
+          };
           const lines = [
             '| Metric | % |',
             '|---|---:|',
@@ -44,7 +52,7 @@ jobs:
             .filter(([k]) => k !== 'total')
             .filter(([k]) => /\.js$/.test(k) && !k.includes('tests/') && !k.includes('node_modules'))
             .map(([k,v]) => ({
-              file: k.replace(/^.*?\/?workspace\/?/, ''),
+              file: toRepoPath(k),
               s: v.statements.pct,
               b: v.branches.pct,
               f: v.functions.pct,
