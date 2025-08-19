@@ -38,7 +38,7 @@ describe('popup UI', () => {
     await new Promise(r => setTimeout(r, 0))
   })
 
-  it.skip('renders weekday, month, and tomorrow buttons', () => {
+  it('renders weekday, month, and tomorrow buttons', () => {
     const weekdayButtons = document.querySelectorAll('#buttons button')
     expect(weekdayButtons.length).toBe(7)
     const monthButton = document.querySelector('#special-buttons #month-button')
@@ -47,7 +47,7 @@ describe('popup UI', () => {
     expect(tomorrow).not.toBeNull()
   })
 
-  it.skip('clicking a weekday snooze button calls snoozePages and closes tabs', async () => {
+  it('clicking a weekday snooze button calls snoozePages and closes tabs', async () => {
     const first = document.querySelector('#buttons button')
     first.click()
     await new Promise(r => setTimeout(r, 0))
