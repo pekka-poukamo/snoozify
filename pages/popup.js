@@ -15,7 +15,7 @@ const initializeWeekDayButtons = (options = {}) => {
 	const buttonContainer = document.querySelector('#buttons')
 
 	Promise.all(
-		getNextWeekdaysFromToday({additionalWeek: options.additionalWeek})
+		getNextWeekdaysFromToday({ additionalWeek: options.additionalWeek, additionalWeeks: options.additionalWeeks })
 		.map(date => getSnoozeButton(document.querySelector('#datebutton').content)(date))
 		)
 	.then(buttonElements => {
@@ -46,7 +46,9 @@ const initializeMonthButton = async (options = {}) => {
 	const buttonTemplate = document.querySelector('#datebutton').content
 
 	const date = new Date()
-	date.setDate(date.getDate() + 28 + (options.additionalMonth ? 28 : 0)) // 4 (or 8) weeks in future
+	const additionalMonthsCount = options.additionalMonths ? options.additionalMonths : (options.additionalMonth ? 1 : 0)
+	const extraDaysFromMonths = additionalMonthsCount * 28
+	date.setDate(date.getDate() + 28 + extraDaysFromMonths) // base 4 weeks + optional extra months (each as 4 weeks)
 
 	if (date.getDay() !== 1) {
 		const day = date.getDay()
@@ -132,17 +134,41 @@ document.addEventListener("DOMContentLoaded", () => {
 		initializeTestButton()
 	}
 
+	let isShiftDown = false
+	let isAltDown = false
+
+	const updateButtonsBasedOnModifiers = () => {
+		if (isShiftDown && isAltDown) {
+			initializeWeekDayButtons({ additionalWeeks: 2 })
+			initializeMonthButton({ additionalMonths: 2 })
+		} else if (isShiftDown) {
+			initializeWeekDayButtons({ additionalWeek: true })
+			initializeMonthButton({ additionalMonth: true })
+		} else {
+			initializeWeekDayButtons()
+			initializeMonthButton()
+		}
+	}
+
 	document.addEventListener('keydown', event => {
 		if (event.key === 'Shift') {
-			initializeWeekDayButtons({additionalWeek: true})
-			initializeMonthButton({additionalMonth: true})
+			isShiftDown = true
+			updateButtonsBasedOnModifiers()
+		}
+		if (event.key === 'Alt') {
+			isAltDown = true
+			updateButtonsBasedOnModifiers()
 		}
 	})
 
 	document.addEventListener('keyup', event => {
 		if (event.key === 'Shift') {
-			initializeWeekDayButtons({additionalWeek: false})
-			initializeMonthButton({additionalMonth: false})
+			isShiftDown = false
+			updateButtonsBasedOnModifiers()
+		}
+		if (event.key === 'Alt') {
+			isAltDown = false
+			updateButtonsBasedOnModifiers()
 		}
 	})
 })
