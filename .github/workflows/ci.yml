@@ -20,10 +20,18 @@ jobs:
           cache: npm
       - run: npm install
       - run: npm run test:coverage
+      - name: Short SHA
+        id: short
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
       - name: Generate coverage summary
         id: cov
         run: |
           node -e "const s=require('./coverage/coverage-summary.json');const pct=x=>x.toFixed(2);const t=s.total;console.log(`| Metric | % |\n|---|---:|\n| Statements | ${pct(t.statements.pct)} |\n| Branches | ${pct(t.branches.pct)} |\n| Functions | ${pct(t.functions.pct)} |\n| Lines | ${pct(t.lines.pct)} |`);" > coverage_summary.md
+          {
+            echo 'summary<<EOF'
+            cat coverage_summary.md
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
       - name: Find existing coverage comment
         id: fc
         uses: peter-evans/find-comment@v3
@@ -39,12 +47,8 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Coverage Summary
+            **Coverage Summary** for `${{ steps.short.outputs.sha }}`
 
-            ```
-            ${{ github.sha }}
-            ```
-
-            $(cat coverage_summary.md)
+            ${{ steps.cov.outputs.summary }}
           edit-mode: replace
 
