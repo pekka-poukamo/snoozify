@@ -1,1 +1,13 @@
 */.DS_Store
+node_modules/
+coverage/
+.vitest/
+.vite/
+*.log
+npm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+*.local
+*.env
+dist/
