@@ -134,14 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		initializeTestButton()
 	}
 
-	let isShiftDown = false
-	let isAltDown = false
-
-	const updateButtonsBasedOnModifiers = () => {
-		if (isShiftDown && isAltDown) {
+	const updateButtonsBasedOnModifiers = (shiftDown, altDown) => {
+		if (shiftDown && altDown) {
 			initializeWeekDayButtons({ additionalWeeks: 2 })
 			initializeMonthButton({ additionalMonths: 2 })
-		} else if (isShiftDown) {
+		} else if (shiftDown) {
 			initializeWeekDayButtons({ additionalWeek: true })
 			initializeMonthButton({ additionalMonth: true })
 		} else {
@@ -151,24 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 	document.addEventListener('keydown', event => {
-		if (event.key === 'Shift') {
-			isShiftDown = true
-			updateButtonsBasedOnModifiers()
-		}
-		if (event.key === 'Alt') {
-			isAltDown = true
-			updateButtonsBasedOnModifiers()
+		if (event.key === 'Shift' || event.key === 'Alt') {
+			updateButtonsBasedOnModifiers(event.shiftKey, event.altKey)
 		}
 	})
 
 	document.addEventListener('keyup', event => {
-		if (event.key === 'Shift') {
-			isShiftDown = false
-			updateButtonsBasedOnModifiers()
-		}
-		if (event.key === 'Alt') {
-			isAltDown = false
-			updateButtonsBasedOnModifiers()
+		if (event.key === 'Shift' || event.key === 'Alt') {
+			updateButtonsBasedOnModifiers(event.shiftKey, event.altKey)
 		}
 	})
 })
