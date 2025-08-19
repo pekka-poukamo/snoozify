@@ -37,9 +37,31 @@ jobs:
             `| Lines | ${pct(t.lines.pct)} |`,
           ];
           fs.writeFileSync('coverage_summary.md', lines.join('\n'));
+
+          // Per-file table for .js files only (excluding tests and node_modules)
+          const rows = [['File','Stmts','Branch','Funcs','Lines']];
+          const files = Object.entries(s)
+            .filter(([k]) => k !== 'total')
+            .filter(([k]) => /\.js$/.test(k) && !k.includes('tests/') && !k.includes('node_modules'))
+            .map(([k,v]) => ({
+              file: k.replace(/^.*?\/?workspace\/?/, ''),
+              s: v.statements.pct,
+              b: v.branches.pct,
+              f: v.functions.pct,
+              l: v.lines.pct,
+            }))
+            .sort((a,b) => a.s - b.s);
+          const table = [
+            '| File | Stmts | Branch | Funcs | Lines |',
+            '|---|---:|---:|---:|---:|',
+            ...files.map(r => `| ${r.file} | ${pct(r.s)} | ${pct(r.b)} | ${pct(r.f)} | ${pct(r.l)} |`)
+          ].join('\n');
+          fs.writeFileSync('coverage_files.md', table);
           NODE
           printf "**Coverage Summary** for \`%s\`\n\n" "${GITHUB_SHA:0:7}" > pr_coverage_comment.md
           cat coverage_summary.md >> pr_coverage_comment.md
+          printf "\n\n**Per-file coverage**\n\n" >> pr_coverage_comment.md
+          cat coverage_files.md >> pr_coverage_comment.md
       - name: Find existing coverage comment
         id: fc
         uses: peter-evans/find-comment@v3
