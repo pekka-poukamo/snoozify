@@ -1,7 +1,8 @@
 {
 	"name": "snoozify",
-	"description": "simple snooze tab extension",
-	"version": "0.1.0",
+	"description": "Snooze tabs to re-open them on a specific day. Clean, simple, no account required.",
+	"version": "1.0.0",
+	"homepage_url": "https://github.com/pekka-poukamo/snoozify",
 	"icons": {
 		"16": "/assets/icon-16.png",
 		"32": "/assets/icon-32.png",

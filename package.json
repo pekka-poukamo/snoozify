@@ -1,6 +1,6 @@
 {
   "name": "snoozify",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "dev:ext": "web-ext run --config web-ext-config.cjs --target chromium --chromium-profile .context/chrome-profile --keep-profile-changes",
     "test": "vitest",
     "test:run": "vitest --run",
-    "test:coverage": "vitest --run --coverage"
+    "test:coverage": "vitest --run --coverage",
+    "pack": "web-ext build --config web-ext-config.cjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.7",
