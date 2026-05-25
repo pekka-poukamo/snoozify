@@ -3,6 +3,7 @@ module.exports = {
   artifactsDir: '.context/web-ext-artifacts',
   ignoreFiles: [
     'node_modules', 'tests', 'coverage',
-    '.context', 'web-ext-config.cjs', '*.config.js', '*.setup.js', 'setup.sh',
+    '.context', 'package.json', 'package-lock.json',
+    'web-ext-config.cjs', '*.config.js', '*.setup.js', 'setup.sh',
   ],
 };
