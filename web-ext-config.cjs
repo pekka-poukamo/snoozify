@@ -5,5 +5,6 @@ module.exports = {
     'node_modules', 'tests', 'coverage',
     '.context', 'package.json', 'package-lock.json',
     'web-ext-config.cjs', 'web-ext-config.mjs', '*.config.js', '*.setup.js', 'setup.sh',
+    'README.md', 'LICENSE', 'PRIVACY.md', 'PUBLISHING.md', '.gitignore',
   ],
 };

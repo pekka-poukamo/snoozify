@@ -2,29 +2,21 @@
 
 [![CI](https://github.com/pekka-poukamo/snoozify/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pekka-poukamo/snoozify/actions/workflows/ci.yml)
 
-A tool for snoozing tabs. Developed for personal use, out of frustration for existing tab snooze extensions.
+Snooze browser tabs to re-open them on a chosen day. Developed for personal use, out of frustration with bloated or defunct tab snooze extensions.
 
-Hold shift to see the snooze options for following date.
+- Snooze to tomorrow, any day of the week, or further ahead
+- See all snoozed pages grouped by date
+- Wake up pages early with one click
+- Export/import your snooze list as JSON
+- No account required, no external servers, no tracking
 
-## Warnings
-
-There are no automatic tests and there might be bugs. Don't rely on this for any critical information. As of March 2023, I'm using the published state daily so it *should* be fairly stable.
+Hold shift (and alt) to see snooze options for the following week.
 
 ## Installing
 
-Clone the package and follow instructions from [Chrome developer documentation](https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/#load-unpacked) to load the extension.
+Load unpacked by cloning this repo and following the [Chrome developer documentation](https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/#load-unpacked).
 
-## This is FYI-style open source
+## This is FYI open source
 
-This is FYI-style open source. I'm sharing it for interested parties, but without any stewardship commitment. Assume that my default response to issues and pull requests will be to ignore or close them without comment. If you do something interesting with this, though, please let me know.
-
-## Todo
-
-There's no commitment to working on or publishing these todo items.
-
-- Tests
-- Add settings & time controls (e.g. wake up at 8:00)
-- Styling & visual design
-- "Later"-button
-	- Only weekdays option
+This is FYI open source. I'm sharing it for interested parties, but without any stewardship commitment. Assume that my default response to issues and pull requests will be to ignore or close them without comment. If you do something interesting with this, though, please let me know.
 
