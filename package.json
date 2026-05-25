@@ -4,15 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "setup": "bash setup.sh",
+    "dev": "concurrently -n test,ext -c blue,green \"npm run dev:test\" \"npm run dev:ext\"",
+    "dev:test": "vitest",
+    "dev:ext": "web-ext run --config web-ext-config.cjs --target chromium --chromium-profile .context/chrome-profile --keep-profile-changes",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:coverage": "vitest --run --coverage"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "c8": "^9.1.0",
+    "concurrently": "^8.2.0",
     "jsdom": "^24.0.0",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.7",
+    "web-ext": "^10.2.0"
   }
 }
-
