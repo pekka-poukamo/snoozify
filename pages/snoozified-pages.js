@@ -30,7 +30,6 @@ const initializeHistory = () => {
 			dateGroup.querySelector('.date-group__count').textContent = `${pages.length}`
 			const pagesElement = dateGroup.querySelector('.date-group__pages')
 			pages
-			.filter(page => page.openedDate === undefined)
 			.map(getPageElement)
 			.forEach(pageLink => pagesElement.appendChild(pageLink))
 
@@ -52,12 +51,8 @@ const getPageElement = page => {
 	linkElement.textContent = page.title;
 
 	pageLink.querySelector('.page-link__wakeupdate').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(new Date(page.wakeUpDate));
-	pageLink.querySelector('.page-link__wakeup-button').addEventListener('click', getWakeupButtonFunction(page.uid));
+	pageLink.querySelector('.page-link__wakeup-button').addEventListener('click', () => openPageById(page.uid));
 	return pageLink;
-};
-
-const getWakeupButtonFunction = uid => async () => {
-	openPageById(uid);
 };
 
 /* Run the extension */
