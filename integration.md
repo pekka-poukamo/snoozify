@@ -3,6 +3,9 @@
 ## Purpose
 A Chrome extension that snoozes browser tabs to reopen them on a chosen day. Works entirely locally — no account, no external servers, no tracking.
 
+## Local path
+`/Users/pekka.poukamo/Library/CloudStorage/Dropbox/Nettiprojektit/snoozify`
+
 ## Where it runs
 - **Environment**: Chrome browser extension
 - **Dev**: Load unpacked from repo root in Chrome (`chrome://extensions` → Load unpacked)
