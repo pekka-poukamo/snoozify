@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-vi.mock('/scripts/testing.js', () => ({ testing: true }))
 import Storage from '/scripts/storage.js'
 
 describe('snoozified-pages UI', () => {
@@ -30,8 +29,8 @@ describe('snoozified-pages UI', () => {
 
   it('renders grouped pages with counts and wires wakeup buttons', async () => {
     chrome.storage.sync._store = {
-      snoozify_dates_testing: ['2023-01-01'],
-      'snoozify__testing2023-01-01': [
+      snoozify_dates: ['2023-01-01'],
+      'snoozify_2023-01-01': [
         { page_title: 'A', page_url: 'https://a', page_hash: 'x1' },
         { page_title: 'B', page_url: 'https://b', page_hash: 'x2' },
       ],

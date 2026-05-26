@@ -1,5 +1,4 @@
 import { openPagesDueBy } from '/scripts/snoozer.js'
-import { trace } from '/scripts/utils.js'
 
 const alarmName = 'Snoozify scheduler'
 

@@ -1,21 +1,42 @@
-import { testing } from '/scripts/testing.js'
 import { getUID } from '/scripts/utils.js'
 
-// Constants for keys
-let SNOOZIFY_DATES_KEY = 'snoozify_dates';
-let SNOOZIFY_DATE_PREFIX = 'snoozify_';
+// Storage schema (v2)
+// Keys:
+//   snoozify_version        — integer, current schema version (CURRENT_SCHEMA_VERSION)
+//   snoozify_dates          — string[], list of ISO date strings with snoozed pages
+//   snoozify_YYYY-MM-DD     — {page_title, page_url, page_hash}[], pages for that date
+//
+// Backwards compatibility is a hard requirement: users' snoozed pages must survive
+// extension updates. When changing the schema:
+//   1. Bump CURRENT_SCHEMA_VERSION
+//   2. Add a migration case in runMigrations() in this file (create it if it doesn't exist)
+//   3. Call Storage.runMigrations() from worker.js via chrome.runtime.onInstalled
+//   4. Add tests for the migration in tests/storage.migration.test.js
+//   5. Update this comment and the README
 
-if (testing) {
-  SNOOZIFY_DATES_KEY += '_testing'
-  SNOOZIFY_DATE_PREFIX += '_testing'
-}
+const SNOOZIFY_VERSION_KEY = 'snoozify_version'  // eslint-disable-line no-unused-vars
+const CURRENT_SCHEMA_VERSION = 2  // eslint-disable-line no-unused-vars
 
-// Function to clear all snoozed pages data
+const SNOOZIFY_DATES_KEY = 'snoozify_dates';
+const SNOOZIFY_DATE_PREFIX = 'snoozify_';
+
+const toStorageDate = wakeUpDate => new Date(wakeUpDate).toISOString().split('T')[0];
+
+const pagesToStorageObject = pages => {
+  const datesMap = pages.reduce((acc, page) => {
+    const key = SNOOZIFY_DATE_PREFIX + toStorageDate(page.wakeUpDate);
+    acc[key] = acc[key] || [];
+    acc[key].push({ page_title: page.title, page_url: page.url, page_hash: page.uid });
+    return acc;
+  }, {});
+  const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
+  return { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+};
+
 const clearSnoozedPages = () => {
-  // Clear all related keys
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(keys => {
-      const keysToDelete = Object.keys(keys).filter(key => key.startsWith(SNOOZIFY_DATE_PREFIX) || key === SNOOZIFY_DATES_KEY);
+      const keysToDelete = Object.keys(keys).filter(key => (key.startsWith(SNOOZIFY_DATE_PREFIX) || key === SNOOZIFY_DATES_KEY) && key !== SNOOZIFY_VERSION_KEY);
       chrome.storage.sync.remove(keysToDelete, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
@@ -26,7 +47,6 @@ const clearSnoozedPages = () => {
   });
 };
 
-// Function to get all snoozed pages or snoozed pages for a specific date
 const getSnoozedPages = (date = null) => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(SNOOZIFY_DATES_KEY, result => {
@@ -48,7 +68,6 @@ const getSnoozedPages = (date = null) => {
         keys.forEach(key => {
           const wakeUpDate = key.replace(SNOOZIFY_DATE_PREFIX, '');
           (pagesResult[key] || []).forEach(page => {
-            // Transform the page object to the desired format
             snoozedPages.push({
               title: page.page_title,
               url: page.page_url,
@@ -64,97 +83,45 @@ const getSnoozedPages = (date = null) => {
   });
 };
 
-// Function to get the count of snoozed pages for a specific date (ignoring time)
-const getSnoozedPageCount = (dateString) => {
-  return new Promise((resolve, reject) => {
-    let date = new Date(dateString); // convert the dateString to a Date object
+const getSnoozedPageCount = dateString =>
+  getSnoozedPages(toStorageDate(dateString))
+    .then(pages => pages.length);
 
-    getSnoozedPages()
-    .then(snoozedPages => {
-        // Filter pages to include only those that match the specified date (ignoring time)
-      const matchingPages = snoozedPages.filter(page => {
-        const pageDate = new Date(page.wakeUpDate);
-        return pageDate.getFullYear() === date.getFullYear()
-        && pageDate.getMonth() === date.getMonth()
-        && pageDate.getDate() === date.getDate();
-      });
+const importSnoozifiedPages = async (importedPages) => {
+  const existingPages = await getSnoozedPages();
+  const existingUIDs = new Set(existingPages.map(page => page.uid));
 
-      resolve(matchingPages.length);
-    })
-    .catch(error => reject(error));
+  importedPages.forEach(page => {
+    while (existingUIDs.has(page.uid)) {
+      page.uid = getUID();
+    }
+    existingUIDs.add(page.uid);
   });
-};
 
-const importSnoozifiedPages = (importedPages) => {
-  return new Promise(async (resolve, reject) => {
-    const existingPages = await getSnoozedPages();
-    const existingUIDs = new Set(existingPages.map(page => page.uid));
+  const queryObject = pagesToStorageObject([...existingPages, ...importedPages]);
 
-        // Process the imported pages
-    importedPages.forEach(page => {
-      while (existingUIDs.has(page.uid)) {
-        page.uid = getUID();
-      }
-      existingUIDs.add(page.uid); 
-    });
-
-        // Combine existing pages with the imported pages
-    const combinedPages = [...existingPages, ...importedPages];
-
-        // Format the combined data for storage
-    const datesMap = combinedPages.reduce((acc, page) => {
-      const key = SNOOZIFY_DATE_PREFIX + new Date(page.wakeUpDate).toISOString().split('T')[0];
-      acc[key] = acc[key] || [];
-      acc[key].push({
-        page_title: page.title,
-        page_url: page.url,
-        page_hash: page.uid,
-      });
-      return acc;
-    }, {});
-
-    const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
-    const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
-
-        // Store the transformed data back into Chrome storage
+  return new Promise((resolve, reject) => {
     chrome.storage.sync.set(queryObject, () => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 };
 
-// Function to remove a snoozed page by UID
 const removePagesByUIDs = uids => {
   return new Promise((resolve, reject) => {
     getSnoozedPages()
     .then(snoozedPages => {
-        // Filter out the pages with the specified UIDs
       const updatedPages = snoozedPages.filter(page => !uids.includes(page.uid));
+      const queryObject = pagesToStorageObject(updatedPages);
 
-        // Group pages by wakeUpDate
-      const datesMap = updatedPages.reduce((acc, page) => {
-        const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
-        acc[key] = acc[key] || [];
-        acc[key].push({
-          page_title: page.title,
-          page_url: page.url,
-          page_hash: page.uid,
-        });
-        return acc;
-      }, {});
-
-      const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
-      const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
-
-        // Prepare keys to delete (dates that have no pages left)
       const keysToDelete = snoozedPages
-      .map(page => SNOOZIFY_DATE_PREFIX + page.wakeUpDate)
-      .filter(key => !datesMap[key]);
+        .map(page => SNOOZIFY_DATE_PREFIX + toStorageDate(page.wakeUpDate))
+        .filter(key => !queryObject[key]);
 
-        // Set new data and remove empty keys
       chrome.storage.sync.set(queryObject, () => {
         if (chrome.runtime.lastError) {
           console.error('Storage Error:', chrome.runtime.lastError);
@@ -162,7 +129,6 @@ const removePagesByUIDs = uids => {
           return;
         }
 
-          // Remove empty date-specific keys
         chrome.storage.sync.remove(keysToDelete, () => {
           if (chrome.runtime.lastError) {
             console.error('Storage Error:', chrome.runtime.lastError);
@@ -181,29 +147,11 @@ const removePagesByUIDs = uids => {
   });
 };
 
-
-// Function to snooze a list of pages
 const snoozePages = pages => {
   return new Promise((resolve, reject) => {
     getSnoozedPages()
     .then(existingPages => {
-        // Combine existing snoozed pages with new ones
-      const combinedPages = existingPages.concat(pages);
-
-        // Group pages by wakeUpDate
-      const datesMap = combinedPages.reduce((acc, page) => {
-        const key = SNOOZIFY_DATE_PREFIX + page.wakeUpDate;
-        acc[key] = acc[key] || [];
-        acc[key].push({
-          page_title: page.title,
-          page_url: page.url,
-            page_hash: page.uid, // Using uid instead of id
-          });
-        return acc;
-      }, {});
-
-      const dates = Object.keys(datesMap).map(key => key.replace(SNOOZIFY_DATE_PREFIX, ''));
-      const queryObject = { [SNOOZIFY_DATES_KEY]: dates, ...datesMap };
+      const queryObject = pagesToStorageObject(existingPages.concat(pages));
 
       chrome.storage.sync.set(queryObject, () => {
         if (chrome.runtime.lastError) {
