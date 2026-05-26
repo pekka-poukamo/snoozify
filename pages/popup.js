@@ -8,7 +8,7 @@ import {
 	getNextWeekdaysFromToday,
 	byDate,
 	datesSameWeek,
-} from '/scripts//utils.js'
+} from '/scripts/utils.js'
 
 
 const initializeWeekDayButtons = (options = {}) => {
@@ -40,15 +40,15 @@ const initializeTomorrowButton = () => {
 	});
 }
 
-const initializeMonthButton = async (options = {}) => {
+const initializeMonthButton = (options = {}) => {
 
 	const buttonContainer = document.querySelector('#special-buttons')
 	const buttonTemplate = document.querySelector('#datebutton').content
 
 	const date = new Date()
-	const additionalMonthsCount = options.additionalMonths ? options.additionalMonths : (options.additionalMonth ? 1 : 0)
+	const additionalMonthsCount = options.additionalMonths || 0
 	const extraDaysFromMonths = additionalMonthsCount * 28
-	date.setDate(date.getDate() + 28 + extraDaysFromMonths) // base 4 weeks + optional extra months (each as 4 weeks)
+	date.setDate(date.getDate() + 28 + extraDaysFromMonths)
 
 	if (date.getDay() !== 1) {
 		const day = date.getDay()
@@ -56,9 +56,7 @@ const initializeMonthButton = async (options = {}) => {
 		date.setDate(date.getDate() + daysUntilNextMonday)
 	}
 
-	const button = getSnoozeButton(buttonTemplate)(date)
-
-	Promise.resolve(button)
+	getSnoozeButton(buttonTemplate)(date)
 	.then(buttonElement => {
 		buttonElement.firstElementChild.id = 'month-button'
 		buttonElement.firstElementChild.classList.remove('future-week')
@@ -139,8 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
 			initializeWeekDayButtons({ additionalWeeks: 2 })
 			initializeMonthButton({ additionalMonths: 2 })
 		} else if (shiftDown) {
-			initializeWeekDayButtons({ additionalWeek: true })
-			initializeMonthButton({ additionalMonth: true })
+			initializeWeekDayButtons({ additionalWeeks: 1 })
+			initializeMonthButton({ additionalMonths: 1 })
 		} else {
 			initializeWeekDayButtons()
 			initializeMonthButton()
