@@ -13,6 +13,12 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       exclude: [],
+      thresholds: {
+        statements: 80,
+        branches: 58,
+        functions: 82,
+        lines: 79,
+      },
     },
   },
   resolve: {

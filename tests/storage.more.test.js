@@ -56,5 +56,53 @@ describe('storage extra', () => {
     Storage.calculateStorageSize()
     Storage.logSyncStorage()
   })
+
+  it('getSnoozedPages rejects when first get errors', async () => {
+    const spy = vi.spyOn(chrome.storage.sync, 'get').mockImplementationOnce((keys, cb) => {
+      chrome.runtime.lastError = { message: 'dates fetch error' }
+      cb({})
+      chrome.runtime.lastError = null
+    })
+    await expect(Storage.getSnoozedPages()).rejects.toMatchObject({ message: 'dates fetch error' })
+    spy.mockRestore()
+  })
+
+  it('getSnoozedPages rejects when second get errors', async () => {
+    chrome.storage.sync._store = { snoozify_dates: ['2023-01-01'] }
+    const spy = vi.spyOn(chrome.storage.sync, 'get')
+      .mockImplementationOnce((keys, cb) => cb({ snoozify_dates: ['2023-01-01'] }))
+      .mockImplementationOnce((keys, cb) => {
+        chrome.runtime.lastError = { message: 'pages fetch error' }
+        cb({})
+        chrome.runtime.lastError = null
+      })
+    await expect(Storage.getSnoozedPages()).rejects.toMatchObject({ message: 'pages fetch error' })
+    spy.mockRestore()
+  })
+
+  it('clearSnoozedPages rejects when remove errors', async () => {
+    chrome.storage.sync._store = {
+      snoozify_dates: ['2023-01-01'],
+      'snoozify_2023-01-01': [],
+    }
+    const spy = vi.spyOn(chrome.storage.sync, 'remove').mockImplementationOnce((keys, cb) => {
+      chrome.runtime.lastError = { message: 'remove error' }
+      cb()
+      chrome.runtime.lastError = null
+    })
+    await expect(Storage.clearSnoozedPages()).rejects.toMatchObject({ message: 'remove error' })
+    spy.mockRestore()
+  })
+
+  it('snoozePages rejects when set errors', async () => {
+    const spy = vi.spyOn(chrome.storage.sync, 'set').mockImplementationOnce((obj, cb) => {
+      chrome.runtime.lastError = { message: 'set error' }
+      cb()
+      chrome.runtime.lastError = null
+    })
+    const pages = [{ title: 'A', url: 'https://a', uid: '1', wakeUpDate: '2023-01-01' }]
+    await expect(Storage.snoozePages(pages)).rejects.toMatchObject({ message: 'set error' })
+    spy.mockRestore()
+  })
 })
 

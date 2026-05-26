@@ -1,5 +1,22 @@
 import { getUID } from '/scripts/utils.js'
 
+// Storage schema (v2)
+// Keys:
+//   snoozify_version        — integer, current schema version (CURRENT_SCHEMA_VERSION)
+//   snoozify_dates          — string[], list of ISO date strings with snoozed pages
+//   snoozify_YYYY-MM-DD     — {page_title, page_url, page_hash}[], pages for that date
+//
+// Backwards compatibility is a hard requirement: users' snoozed pages must survive
+// extension updates. When changing the schema:
+//   1. Bump CURRENT_SCHEMA_VERSION
+//   2. Add a migration case in runMigrations() in this file (create it if it doesn't exist)
+//   3. Call Storage.runMigrations() from worker.js via chrome.runtime.onInstalled
+//   4. Add tests for the migration in tests/storage.migration.test.js
+//   5. Update this comment and the README
+
+const SNOOZIFY_VERSION_KEY = 'snoozify_version'  // eslint-disable-line no-unused-vars
+const CURRENT_SCHEMA_VERSION = 2  // eslint-disable-line no-unused-vars
+
 const SNOOZIFY_DATES_KEY = 'snoozify_dates';
 const SNOOZIFY_DATE_PREFIX = 'snoozify_';
 
@@ -19,7 +36,7 @@ const pagesToStorageObject = pages => {
 const clearSnoozedPages = () => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(keys => {
-      const keysToDelete = Object.keys(keys).filter(key => key.startsWith(SNOOZIFY_DATE_PREFIX) || key === SNOOZIFY_DATES_KEY);
+      const keysToDelete = Object.keys(keys).filter(key => (key.startsWith(SNOOZIFY_DATE_PREFIX) || key === SNOOZIFY_DATES_KEY) && key !== SNOOZIFY_VERSION_KEY);
       chrome.storage.sync.remove(keysToDelete, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
