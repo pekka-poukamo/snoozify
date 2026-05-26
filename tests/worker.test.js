@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-vi.mock('/scripts/testing.js', () => ({ testing: true }))
 
 describe('worker', () => {
   beforeEach(async () => {
@@ -19,11 +18,11 @@ describe('worker', () => {
     await import('/scripts/worker.js')
     // Seed storage with one due page and one future
     chrome.storage.sync._store = {
-      snoozify_dates_testing: ['2023-01-01', '2099-01-01'],
-      'snoozify__testing2023-01-01': [
+      snoozify_dates: ['2023-01-01', '2099-01-01'],
+      'snoozify_2023-01-01': [
         { page_title: 'Due', page_url: 'https://due', page_hash: 'due' },
       ],
-      'snoozify__testing2099-01-01': [
+      'snoozify_2099-01-01': [
         { page_title: 'Future', page_url: 'https://future', page_hash: 'f' },
       ],
     }

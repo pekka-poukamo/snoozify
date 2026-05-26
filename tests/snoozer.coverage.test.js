@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-vi.mock('/scripts/testing.js', () => ({ testing: true }))
 import * as Snoozer from '/scripts/snoozer.js'
 import Storage from '/scripts/storage.js'
 import * as Utils from '/scripts/utils.js'
@@ -23,7 +22,7 @@ describe('snoozer coverage', () => {
     await Snoozer.snoozePages(pages)
 
     // Verify stored data contains the assigned UIDs
-    expect(Object.keys(chrome.storage.sync._store)).toContain('snoozify_dates_testing')
+    expect(Object.keys(chrome.storage.sync._store)).toContain('snoozify_dates')
     const allValues = Object.values(chrome.storage.sync._store).flat()
     const storedUids = JSON.stringify(allValues)
     expect(storedUids).toMatch(/u1|u2/)

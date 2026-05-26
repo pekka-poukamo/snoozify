@@ -1,5 +1,4 @@
 import { snoozePages } from '/scripts/snoozer.js'
-import { testing } from '/scripts/testing.js'
 import Storage from '/scripts/storage.js'
 import {
 	getUID,
@@ -67,25 +66,6 @@ const initializeMonthButton = (options = {}) => {
 	})
 }
 
-
-
-const initializeTestButton = () => {
-	const weekDayFormatOptions = {weekday: 'long'}
-	const dateFormatOptions = {day: 'numeric', month: 'short'}
-
-	const buttonContainer = document.querySelector('#special-buttons')
-	const buttonTemplate = document.querySelector('#datebutton').content
-	const button = buttonTemplate.cloneNode(true)
-
-	const now = new Date()
-	button.querySelector('.datebutton__weekday').textContent = 'Testing — ' + new Intl.DateTimeFormat('en-US', weekDayFormatOptions).format(now)
-	button.querySelector('.datebutton__date').textContent = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(now)
-	button.firstElementChild.id = 'test-button'
-
-	buttonContainer.appendChild(button)
-	document.querySelector('#test-button').addEventListener('click', getSnoozeButtonFunction(now))
-}
-
 const getSnoozeButton = buttonTemplate => weekday => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
@@ -127,10 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	initializeWeekDayButtons()
 	initializeTomorrowButton()
 	initializeMonthButton()
-	
-	if (testing) {
-		initializeTestButton()
-	}
 
 	const updateButtonsBasedOnModifiers = (shiftDown, altDown) => {
 		if (shiftDown && altDown) {

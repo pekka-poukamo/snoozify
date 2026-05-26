@@ -1,13 +1,7 @@
-import { testing } from '/scripts/testing.js'
 import { getUID } from '/scripts/utils.js'
 
-let SNOOZIFY_DATES_KEY = 'snoozify_dates';
-let SNOOZIFY_DATE_PREFIX = 'snoozify_';
-
-if (testing) {
-  SNOOZIFY_DATES_KEY += '_testing'
-  SNOOZIFY_DATE_PREFIX += '_testing'
-}
+const SNOOZIFY_DATES_KEY = 'snoozify_dates';
+const SNOOZIFY_DATE_PREFIX = 'snoozify_';
 
 const toStorageDate = wakeUpDate => new Date(wakeUpDate).toISOString().split('T')[0];
 
