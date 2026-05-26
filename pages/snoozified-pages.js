@@ -85,8 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	Storage.calculateStorageSize()
 
 	document.querySelector('#clear-button').addEventListener('click', () => {
-		Storage.clearSnoozedPages()
-		initializeHistory()
+		Storage.clearSnoozedPages().then(initializeHistory)
 	})
 
 	document.querySelector('#export-button').addEventListener('click', () => {
