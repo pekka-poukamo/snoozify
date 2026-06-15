@@ -11,3 +11,4 @@ yarn.lock
 *.local
 *.env
 dist/
+.worktrees/
