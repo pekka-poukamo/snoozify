@@ -12,7 +12,7 @@ Vocabulary for architecture reviews and implementation. Use these terms in code 
 
 **Active projection** — Materialized set of scheduled snoozes, persisted in `chrome.storage.sync`, rebuilt on every store commit.
 
-**Ledger** — Append-only event log in `chrome.storage.local`. Source of truth for audit history on this device.
+**Ledger** — Append-only event log in `chrome.storage.local`. v1 stores `Woken` events only. Source of truth for wake history on this device.
 
 **Chunk** — A storage item holding a bounded array of records (≤ ~7 KB serialized), used to respect per-item quota limits.
 
@@ -33,4 +33,6 @@ Vocabulary for architecture reviews and implementation. Use these terms in code 
 
 ## Module seam
 
-**SnoozeStore** — Deep module replacing `scripts/storage.js`. All storage reads and writes go through this seam. Callers know snooze lifecycle operations, not chunks, ledger keys, or sync vs local layout.
+**SnoozeStore** — Facade in `scripts/snooze-store.js` replacing `scripts/storage.js`. All storage reads and writes go through this seam. Callers know snooze lifecycle operations, not chunks, ledger keys, or sync vs local layout.
+
+Internal modules (not imported by callers): `chunk-pack.js`, `sync-projection.js`, `local-ledger.js`.

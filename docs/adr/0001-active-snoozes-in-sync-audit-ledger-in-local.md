@@ -48,7 +48,7 @@ Callers use only the SnoozeStore interface. Chunking, dual adapters, and schema 
 ### Neutral
 
 - `PRIVACY.md` must state: scheduled tabs use Chrome sync; history is local per device.
-- Export/import remains the mechanism for full backup including history.
+- v1 `exportScheduled()` covers scheduled pages only (same as today). Full backup including history is a future `exportBackup()` if needed.
 
 ## Alternatives considered
 
