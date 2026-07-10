@@ -1,6 +1,6 @@
 # SnoozeStore implementation plan
 
-**Status:** In progress (documentation phase)  
+**Status:** Complete  
 **ADR:** [0001 — Active snoozes in sync, audit ledger in local](../adr/0001-active-snoozes-in-sync-audit-ledger-in-local.md)  
 **Domain terms:** [CONTEXT.md](../../CONTEXT.md)
 
@@ -206,35 +206,35 @@ Tests: `tests/storage.migration.test.js`.
 
 ### Phase 2 — SnoozeStore core
 
-- [ ] `scripts/chunk-pack.js`
-- [ ] `scripts/sync-projection.js`
-- [ ] `scripts/local-ledger.js`
-- [ ] `scripts/snooze-store.js` (facade + commit queue)
-- [ ] In-memory adapters (injected at construction)
-- [ ] Unit tests at SnoozeStore interface + `chunk-pack` tests
+- [x] `scripts/chunk-pack.js`
+- [x] `scripts/sync-projection.js`
+- [x] `scripts/local-ledger.js`
+- [x] `scripts/snooze-store.js` (facade + commit queue)
+- [x] In-memory adapters (injected at construction)
+- [x] Unit tests at SnoozeStore interface + `chunk-pack` tests
 
 ### Phase 3 — Migration and wiring
 
-- [ ] `migrate()` v2 → v3
-- [ ] `worker.js`: `onInstalled` + `ensureSchedulerAlarm()` (RC2)
-- [ ] Replace **all** `Storage` imports with `SnoozeStore` (hard cut — no re-export)
-- [ ] Store-before-tabs in `snoozer.js` (RC4)
-- [ ] Flip `tests/rc-bugs.test.js` green; add RC4 test
-- [ ] `tests/storage.migration.test.js`
+- [x] `migrate()` v2 → v3
+- [x] `worker.js`: `onInstalled` + `ensureSchedulerAlarm()` (RC2)
+- [x] Replace **all** `Storage` imports with `SnoozeStore` (hard cut — no re-export)
+- [x] Store-before-tabs in `snoozer.js` (RC4)
+- [x] Flip `tests/rc-bugs.test.js` green; add RC4 test
+- [x] `tests/storage.migration.test.js`
 
 ### Phase 4 — History UI
 
-- [ ] Rename `initializeHistory` → `renderScheduledQueue`
-- [ ] History tab on `snoozified-pages` via `getHistory()`
-- [ ] `onChanged` subscription for live updates
-- [ ] Quota warning for **sync and local** (replace console-only `calculateStorageSize`)
+- [x] Rename `initializeHistory` → `renderScheduledQueue`
+- [x] History tab on `snoozified-pages` via `getHistory()`
+- [x] `onChanged` subscription for live updates
+- [x] Quota warning for **sync and local** (replace console-only `calculateStorageSize`)
 
 ### Phase 5 — Cleanup
 
-- [ ] **Delete** `scripts/storage.js` (no thin re-export)
-- [ ] Update README storage section for v3
-- [ ] Update `PRIVACY.md`
-- [ ] Delete redundant tests superseded by SnoozeStore interface tests
+- [x] **Delete** `scripts/storage.js` (no thin re-export)
+- [x] Update README storage section for v3
+- [x] Update `PRIVACY.md`
+- [x] Delete redundant tests superseded by SnoozeStore interface tests
 
 ---
 
