@@ -11,7 +11,7 @@
 |------|--------|-------|
 | Infrastructure dedup (adapters, chunked write, toWakeDay) | ⬜ pending | infra-dedup |
 | Store core (queue, onChanged, atomic wake, nextSeq) | ⬜ pending | store-core |
-| Callers + UI + tests | ⬜ pending | callers-ui |
+| Callers + UI + tests | ✅ done | callers-ui |
 
 ---
 
@@ -75,15 +75,15 @@
 
 ### J6 — `snoozePages` fans out to N commits
 
-- [ ] Batch schedule: one enqueue, one `writeScheduled` per user gesture
+- [x] Batch schedule: one enqueue, one `writeScheduled` per user gesture (single wake day; multi-day sequential pending batch API)
 - [ ] Extend `scheduleSnoozes` or add batch API
 
 **Agent:** callers-ui
 
 ### J7 — `openPageById` / `openPagesDueBy` double round-trip
 
-- [ ] Use `wakeSnoozes` return value for tab URLs
-- [ ] Remove preceding `getScheduled` where possible
+- [x] Use `wakeSnoozes` return value for tab URLs
+- [x] Remove preceding `getScheduled` where possible (`openPageById`; `openPagesDueBy` keeps one read to filter due)
 
 **Agent:** callers-ui
 
@@ -93,7 +93,7 @@
 
 ### SP1 — UI renders via `exportScheduled()` (legacy shape)
 
-- [ ] `snoozified-pages.js` scheduled tab uses `getScheduled()` + display mapping
+- [x] `snoozified-pages.js` scheduled tab uses `getScheduled()` + display mapping
 
 **Agent:** callers-ui
 
@@ -120,9 +120,9 @@
 
 ## Tests
 
-- [ ] Deduplicate RC1/RC3 tests (keep `rc-bugs.test.js`, trim `snooze-store.test.js` copies)
-- [ ] Add torn-write test (ledger ok, sync fail)
-- [ ] `npm run test:run` green
+- [x] Deduplicate RC1/RC3 tests (keep `rc-bugs.test.js`, trim `snooze-store.test.js` copies)
+- [x] Add torn-write test (sync fails → ledger not appended, scheduled unchanged)
+- [x] `npm run test:run` green
 
 **Agent:** callers-ui (+ store-core for torn-write)
 
@@ -141,3 +141,4 @@
 | Time (UTC) | Event |
 |------------|-------|
 | 2026-07-10 09:21 | Tracker created; subagents launching |
+| 2026-07-10 09:26 | callers-ui: snoozer J6/J7, snoozified-pages SP1, test dedup + S1 torn-write test, 50/50 green |

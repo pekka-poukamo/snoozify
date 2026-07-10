@@ -9,9 +9,17 @@ const QUOTA_WARNING_RATIO = 0.8
 let activeTab = 'scheduled'
 let unsubscribeOnChanged = null
 
+const toDisplayPage = ({ id, title, url, wakeAt }) => ({
+	uid: id,
+	title,
+	url,
+	wakeUpDate: wakeAt,
+})
+
 const renderScheduledQueue = () => {
-	SnoozeStore.exportScheduled()
-	.then(snoozedPages => {
+	SnoozeStore.getScheduled()
+	.then(scheduled => {
+		const snoozedPages = scheduled.map(toDisplayPage)
 		const pageLinksElement = document.querySelector('#page-links')
 		pageLinksElement.innerHTML = ''
 

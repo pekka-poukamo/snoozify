@@ -119,57 +119,32 @@ describe('SnoozeStore', () => {
     expect(history[1].pages[0].title).toBe('A')
   })
 
-  it('serializes concurrent commits (RC1)', async () => {
-    const [due] = await store.scheduleSnoozes(
-      [{ title: 'Due', url: 'https://due' }],
+  it('sync failure during wake leaves ledger and scheduled unchanged (S1)', async () => {
+    const [page] = await store.scheduleSnoozes(
+      [{ title: 'A', url: 'https://a' }],
       '2023-01-01'
     )
 
-    let capturedScheduled = null
     const sync = createMemorySyncAdapter(syncStore)
     const originalSet = sync.set.bind(sync)
     sync.set = vi.fn(async (obj) => {
-      if (obj[`${CHUNK_PREFIX}0`]) {
-        capturedScheduled = { obj, resume: () => originalSet(obj) }
-        return
+      if (obj[`${CHUNK_PREFIX}0`] !== undefined) {
+        throw new Error('sync write failed')
       }
       return originalSet(obj)
     })
 
-    const racingStore = createSnoozeStore({
+    const failingStore = createSnoozeStore({
       syncAdapter: sync,
       ledgerAdapter: createMemoryLedgerAdapter(ledgerStore),
       useChromeListeners: false,
     })
-    await racingStore.scheduleSnoozes([{ title: 'Due', url: 'https://due' }], '2023-01-01')
+    await failingStore.getScheduled()
 
-    const removeDone = racingStore.wakeSnoozes([due.id], 'scheduled')
-    await new Promise(r => setTimeout(r, 0))
+    await expect(failingStore.wakeSnoozes([page.id], 'manual')).rejects.toThrow('sync write failed')
 
-    const scheduleDone = racingStore.scheduleSnoozes(
-      [{ title: 'New', url: 'https://new' }],
-      '2023-02-01'
-    )
-    await new Promise(r => setTimeout(r, 0))
-
-    await capturedScheduled.resume()
-    await removeDone
-    await scheduleDone
-
-    const pages = await racingStore.getScheduled()
-    expect(pages.find(p => p.title === 'New')).toBeTruthy()
-    expect(pages.find(p => p.id === due.id)).toBeUndefined()
-  })
-
-  it('removes orphan chunk keys on write (RC3)', async () => {
-    await store.scheduleSnoozes([{ title: 'A', url: 'https://a' }], '2023-01-01')
-    syncStore[`${CHUNK_PREFIX}1`] = [{ i: 'orphan', t: 'Orphan', u: 'https://o', w: '2023-01-01' }]
-
-    const [page] = await store.getScheduled()
-    await store.wakeSnoozes([page.id], 'scheduled')
-
-    expect(syncStore[`${CHUNK_PREFIX}1`]).toBeUndefined()
-    expect(syncStore[META_KEY].chunks).toEqual([`${CHUNK_PREFIX}0`])
+    expect(await store.getScheduled()).toEqual([page])
+    expect(ledgerStore[LEDGER_META_KEY]).toBeUndefined()
   })
 
   it('getHistory respects limit', async () => {

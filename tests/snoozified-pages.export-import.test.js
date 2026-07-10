@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 const importMock = vi.fn(() => Promise.resolve())
 vi.mock('/scripts/snooze-store.js', () => ({
   default: {
+    getScheduled: vi.fn().mockResolvedValue([]),
     exportScheduled: vi.fn().mockResolvedValue([]),
     getHistory: vi.fn().mockResolvedValue([]),
     onChanged: vi.fn(() => () => {}),
