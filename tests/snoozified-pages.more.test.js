@@ -17,7 +17,13 @@ describe('snoozified-pages empty & import/export', () => {
           <div class="date-group__pages"></div>
         </div>
       </template>
-      <div id="page-links"></div>
+      <nav class="tabs">
+        <button id="tab-scheduled" class="tab tab--active"></button>
+        <button id="tab-history" class="tab"></button>
+      </nav>
+      <p id="quota-warning" hidden></p>
+      <section id="scheduled-panel"><div id="page-links"></div></section>
+      <section id="history-panel" hidden><div id="history-list"></div></section>
       <button id="clear-button"></button>
       <button id="export-button"></button>
       <button id="import-button"></button>

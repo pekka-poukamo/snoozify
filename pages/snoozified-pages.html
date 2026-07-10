@@ -11,9 +11,20 @@
 	<h4><a href="popup.html">← snoozify</a></h4>
 	<h1>snoozified pages</h1>
 
-	<div id="page-links">
-		
-	</div>
+	<nav class="tabs" role="tablist">
+		<button id="tab-scheduled" class="tab tab--active" role="tab" aria-selected="true">Scheduled</button>
+		<button id="tab-history" class="tab" role="tab" aria-selected="false">History</button>
+	</nav>
+
+	<p id="quota-warning" class="quota-warning" hidden></p>
+
+	<section id="scheduled-panel" role="tabpanel">
+		<div id="page-links"></div>
+	</section>
+
+	<section id="history-panel" role="tabpanel" hidden>
+		<div id="history-list"></div>
+	</section>
 
 	<button id="export-button">Export</button>
 	<button id="import-button">Import</button>

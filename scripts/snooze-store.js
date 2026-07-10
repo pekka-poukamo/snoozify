@@ -250,16 +250,6 @@ export function createSnoozeStore({
       })
     },
 
-    calculateStorageSize() {
-      chrome.storage.sync.getBytesInUse(null, bytes => {
-        console.log(`Total sync storage used: ${bytes} bytes`)
-      })
-      chrome.storage.local.getBytesInUse(null, bytes => {
-        console.log(`Total local storage used: ${bytes} bytes`)
-      })
-    },
-
-    /** @param {() => void} callback */
     onChanged(callback) {
       changeListeners.add(callback)
       return () => {

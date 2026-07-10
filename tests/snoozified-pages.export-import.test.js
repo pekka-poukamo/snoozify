@@ -4,7 +4,8 @@ const importMock = vi.fn(() => Promise.resolve())
 vi.mock('/scripts/snooze-store.js', () => ({
   default: {
     exportScheduled: vi.fn().mockResolvedValue([]),
-    calculateStorageSize: vi.fn(),
+    getHistory: vi.fn().mockResolvedValue([]),
+    onChanged: vi.fn(() => () => {}),
     clearAll: vi.fn().mockResolvedValue(undefined),
     importSnoozes: (...a) => importMock(...a),
   }
@@ -15,6 +16,9 @@ describe('snoozified-pages export/import', () => {
     vi.resetModules()
     importMock.mockClear()
     chrome.storage.sync._store = {}
+    chrome.storage.local._store = {}
+    chrome.storage.sync.getBytesInUse = (keys, cb) => cb(0)
+    chrome.storage.local.getBytesInUse = (keys, cb) => cb(0)
     chrome.runtime.lastError = null
 
     document.body.innerHTML = `
@@ -31,7 +35,13 @@ describe('snoozified-pages export/import', () => {
           <div class="date-group__pages"></div>
         </div>
       </template>
-      <div id="page-links"></div>
+      <nav class="tabs">
+        <button id="tab-scheduled" class="tab tab--active"></button>
+        <button id="tab-history" class="tab"></button>
+      </nav>
+      <p id="quota-warning" hidden></p>
+      <section id="scheduled-panel"><div id="page-links"></div></section>
+      <section id="history-panel" hidden><div id="history-list"></div></section>
       <button id="clear-button"></button>
       <button id="export-button"></button>
       <button id="import-button"></button>
@@ -84,7 +94,7 @@ describe('snoozified-pages export/import', () => {
     return readerInstance
   }
 
-  it('file input change with valid JSON calls importSnoozifiedPages', async () => {
+  it('file input change with valid JSON calls importSnoozes', async () => {
     const validPages = [{ title: 'A', url: 'https://a', uid: '1', wakeUpDate: '2023-01-01' }]
     triggerFileLoad(JSON.stringify(validPages))
     await new Promise(r => setTimeout(r, 0))
