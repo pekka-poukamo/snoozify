@@ -20,6 +20,8 @@ Load unpacked by cloning this repo and following the [Chrome developer documenta
 
 Snoozify stores data in `chrome.storage.sync` using a versioned schema. **Backwards compatibility is a hard requirement** — users' snoozed pages must survive extension updates without data loss.
 
+A storage refactor is in progress: [SnoozeStore plan](docs/plan/snooze-store.md) · [ADR-0001](docs/adr/0001-active-snoozes-in-sync-audit-ledger-in-local.md) · [Domain context](CONTEXT.md).
+
 ### Current schema (v2)
 
 | Key | Value |
