@@ -1,4 +1,9 @@
-import { packRecords } from './chunk-pack.js'
+import { writeChunkedProjection } from './chunked-write.js'
+import {
+  createChromeStorageAdapter,
+  createMemoryStorageAdapter,
+} from './storage-adapter.js'
+import { toWakeDay } from './utils.js'
 
 export const META_KEY = 'snoozify_v3_meta'
 export const CHUNK_PREFIX = 'snoozify_v3_c'
@@ -9,8 +14,7 @@ const SNOOZIFY_DATE_PREFIX = 'snoozify_'
 const LEGACY_VERSION_KEY = 'snoozify_version'
 
 /** @typedef {{ id: string, title: string, url: string, wakeAt: string }} ScheduledPage */
-
-const toWakeDay = wakeAt => new Date(wakeAt).toISOString().split('T')[0]
+/** @typedef {import('./storage-adapter.js').StorageAdapter} StorageAdapter */
 
 const toCompact = page => ({
   i: page.id,
@@ -32,7 +36,7 @@ const isV3Key = key =>
   key === META_KEY || key.startsWith(CHUNK_PREFIX)
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
  * @returns {Promise<ScheduledPage[]>}
  */
 export async function readScheduled(adapter) {
@@ -59,27 +63,19 @@ export async function readScheduled(adapter) {
 }
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
  * @param {ScheduledPage[]} scheduled
  */
 export async function writeScheduled(adapter, scheduled) {
   const compactRecords = scheduled.map(toCompact)
-  const packed = packRecords(compactRecords)
-  const newChunkKeys = packed.map((_, index) => chunkKey(index))
 
-  const writes = {}
-  for (let index = 0; index < packed.length; index++) {
-    writes[newChunkKeys[index]] = packed[index]
-  }
-  writes[META_KEY] = { v: SCHEMA_VERSION, chunks: newChunkKeys }
-
-  const all = await adapter.get(null)
-  const orphanKeys = Object.keys(all).filter(key => isV3Key(key) && !(key in writes))
-
-  await adapter.set(writes)
-  if (orphanKeys.length > 0) {
-    await adapter.remove(orphanKeys)
-  }
+  await writeChunkedProjection(adapter, {
+    records: compactRecords,
+    chunkPrefix: CHUNK_PREFIX,
+    metaKey: META_KEY,
+    buildMeta: newChunkKeys => ({ v: SCHEMA_VERSION, chunks: newChunkKeys }),
+    isOwnedKey: isV3Key,
+  })
 }
 
 const isLegacyV2Key = key => {
@@ -96,7 +92,7 @@ const isLegacyV2Key = key => {
 }
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
  * @returns {Promise<ScheduledPage[] | null>} null when v3 meta already exists
  */
 export async function readLegacyV2Scheduled(adapter) {
@@ -133,7 +129,7 @@ export async function readLegacyV2Scheduled(adapter) {
 }
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
  */
 export async function removeLegacyV2Keys(adapter) {
   const all = await adapter.get(null)
@@ -144,71 +140,9 @@ export async function removeLegacyV2Keys(adapter) {
 }
 
 export function createChromeSyncAdapter() {
-  return {
-    get(keys) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(keys, result => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve(result)
-        })
-      })
-    },
-    set(obj) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.sync.set(obj, () => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve()
-        })
-      })
-    },
-    remove(keys) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.sync.remove(keys, () => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve()
-        })
-      })
-    },
-  }
+  return createChromeStorageAdapter('sync')
 }
 
 export function createMemorySyncAdapter(store = {}) {
-  const data = store
-  return {
-    async get(keys) {
-      if (keys === null || keys === undefined) {
-        return { ...data }
-      }
-      if (Array.isArray(keys)) {
-        const result = {}
-        for (const key of keys) {
-          if (key in data) {
-            result[key] = data[key]
-          }
-        }
-        return result
-      }
-      if (typeof keys === 'string') {
-        return keys in data ? { [keys]: data[keys] } : {}
-      }
-      return {}
-    },
-    async set(obj) {
-      Object.assign(data, obj)
-    },
-    async remove(keys) {
-      for (const key of keys) {
-        delete data[key]
-      }
-    },
-  }
+  return createMemoryStorageAdapter(store)
 }

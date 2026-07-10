@@ -1,4 +1,9 @@
-import { packRecords, MAX_CHUNK_BYTES } from './chunk-pack.js'
+import { MAX_CHUNK_BYTES } from './chunk-pack.js'
+import { writeChunkedProjection } from './chunked-write.js'
+import {
+  createChromeStorageAdapter,
+  createMemoryStorageAdapter,
+} from './storage-adapter.js'
 
 export const LEDGER_META_KEY = 'snoozify_ledger_meta'
 export const LEDGER_CHUNK_PREFIX = 'snoozify_ledger_'
@@ -6,6 +11,7 @@ export const MAX_RETAINED_EVENTS = 500
 
 /** @typedef {'scheduled' | 'manual'} WakeReason */
 /** @typedef {{ seq: number, at: string, type: 'Woken', reason: WakeReason, pages: Array<{ id: string, title: string, url: string }> }} LedgerEvent */
+/** @typedef {import('./storage-adapter.js').StorageAdapter} StorageAdapter */
 
 const chunkKey = index => `${LEDGER_CHUNK_PREFIX}${index}`
 
@@ -16,12 +22,14 @@ const isLedgerKey = key =>
   key === LEDGER_META_KEY || isLedgerChunkKey(key)
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
- * @returns {Promise<{ events: LedgerEvent[], meta: { head: string, count: number } | null }>}
+ * @param {StorageAdapter} adapter
+ * @returns {Promise<{ events: LedgerEvent[], meta: { head: string, count: number, nextSeq: number } | null }>}
  */
 async function readLedgerState(adapter) {
   const all = await adapter.get(null)
-  const meta = /** @type {{ head?: string, count?: number } | undefined} */ (all[LEDGER_META_KEY])
+  const meta = /** @type {{ head?: string, count?: number, nextSeq?: number } | undefined} */ (
+    all[LEDGER_META_KEY]
+  )
 
   if (!meta || typeof meta.head !== 'string' || typeof meta.count !== 'number') {
     return { events: [], meta: null }
@@ -43,11 +51,33 @@ async function readLedgerState(adapter) {
     events.push(...chunkEvents)
   }
 
-  return { events, meta: { head: meta.head, count: meta.count } }
+  return {
+    events,
+    meta: {
+      head: meta.head,
+      count: meta.count,
+      nextSeq: meta.nextSeq ?? Math.max(0, ...events.map(event => event.seq ?? 0)),
+    },
+  }
 }
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
+ * @returns {Promise<number>}
+ */
+export async function getNextSeq(adapter) {
+  const { events, meta } = await readLedgerState(adapter)
+  if (meta?.nextSeq != null) {
+    return meta.nextSeq + 1
+  }
+  if (events.length === 0) {
+    return 1
+  }
+  return Math.max(...events.map(event => event.seq ?? 0)) + 1
+}
+
+/**
+ * @param {StorageAdapter} adapter
  * @param {LedgerEvent} event
  */
 export async function appendEvent(adapter, event) {
@@ -57,32 +87,24 @@ export async function appendEvent(adapter, event) {
     ? nextEvents.slice(nextEvents.length - MAX_RETAINED_EVENTS)
     : nextEvents
 
-  const packed = packRecords(retained, MAX_CHUNK_BYTES)
-  const newChunkKeys = packed.map((_, index) => chunkKey(index))
-  const writes = {}
+  const nextSeq = (meta?.nextSeq ?? events.length) + 1
 
-  for (let index = 0; index < packed.length; index++) {
-    writes[newChunkKeys[index]] = packed[index]
-  }
-
-  const head = newChunkKeys[newChunkKeys.length - 1] ?? chunkKey(0)
-  writes[LEDGER_META_KEY] = {
-    head,
-    count: retained.length,
-    nextSeq: event.seq + 1,
-  }
-
-  const all = await adapter.get(null)
-  const orphanKeys = Object.keys(all).filter(key => isLedgerKey(key) && !(key in writes))
-
-  await adapter.set(writes)
-  if (orphanKeys.length > 0) {
-    await adapter.remove(orphanKeys)
-  }
+  await writeChunkedProjection(adapter, {
+    records: retained,
+    chunkPrefix: LEDGER_CHUNK_PREFIX,
+    metaKey: LEDGER_META_KEY,
+    maxBytes: MAX_CHUNK_BYTES,
+    buildMeta: newChunkKeys => ({
+      head: newChunkKeys[newChunkKeys.length - 1] ?? chunkKey(0),
+      count: retained.length,
+      nextSeq,
+    }),
+    isOwnedKey: isLedgerKey,
+  })
 }
 
 /**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @param {StorageAdapter} adapter
  * @param {{ limit?: number }} [options]
  * @returns {Promise<LedgerEvent[]>}
  */
@@ -92,87 +114,10 @@ export async function readHistory(adapter, { limit } = {}) {
   return typeof limit === 'number' ? newestFirst.slice(0, limit) : newestFirst
 }
 
-/**
- * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
- * @returns {Promise<number>}
- */
-export async function getNextSeq(adapter) {
-  const all = await adapter.get([LEDGER_META_KEY])
-  const meta = /** @type {{ nextSeq?: number } | undefined} */ (all[LEDGER_META_KEY])
-  if (meta && typeof meta.nextSeq === 'number') {
-    return meta.nextSeq
-  }
-  const { events } = await readLedgerState(adapter)
-  const maxSeq = events.reduce((max, event) => Math.max(max, event.seq ?? 0), 0)
-  return maxSeq + 1
-}
-
 export function createChromeLedgerAdapter() {
-  return {
-    get(keys) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.local.get(keys, result => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve(result)
-        })
-      })
-    },
-    set(obj) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.local.set(obj, () => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve()
-        })
-      })
-    },
-    remove(keys) {
-      return new Promise((resolve, reject) => {
-        chrome.storage.local.remove(keys, () => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
-          resolve()
-        })
-      })
-    },
-  }
+  return createChromeStorageAdapter('local')
 }
 
 export function createMemoryLedgerAdapter(store = {}) {
-  const data = store
-  return {
-    async get(keys) {
-      if (keys === null || keys === undefined) {
-        return { ...data }
-      }
-      if (Array.isArray(keys)) {
-        const result = {}
-        for (const key of keys) {
-          if (key in data) {
-            result[key] = data[key]
-          }
-        }
-        return result
-      }
-      if (typeof keys === 'string') {
-        return keys in data ? { [keys]: data[keys] } : {}
-      }
-      return {}
-    },
-    async set(obj) {
-      Object.assign(data, obj)
-    },
-    async remove(keys) {
-      for (const key of keys) {
-        delete data[key]
-      }
-    },
-  }
+  return createMemoryStorageAdapter(store)
 }
