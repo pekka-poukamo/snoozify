@@ -15,6 +15,8 @@ export const getUID = () => String(
 	Date.now().toString(32) + Math.random().toString(16)
 	).replace(/\./g, '')
 
+export const toWakeDay = wakeAt => new Date(wakeAt).toISOString().split('T')[0]
+
 
 export const trace = string => object => {
 	console.log(string, object)

@@ -69,6 +69,7 @@ export async function appendEvent(adapter, event) {
   writes[LEDGER_META_KEY] = {
     head,
     count: retained.length,
+    nextSeq: event.seq + 1,
   }
 
   const all = await adapter.get(null)
@@ -89,6 +90,21 @@ export async function readHistory(adapter, { limit } = {}) {
   const { events } = await readLedgerState(adapter)
   const newestFirst = [...events].reverse()
   return typeof limit === 'number' ? newestFirst.slice(0, limit) : newestFirst
+}
+
+/**
+ * @param {{ get: (keys?: string[] | null) => Promise<Record<string, unknown>>, set: (obj: Record<string, unknown>) => Promise<void>, remove: (keys: string[]) => Promise<void> }} adapter
+ * @returns {Promise<number>}
+ */
+export async function getNextSeq(adapter) {
+  const all = await adapter.get([LEDGER_META_KEY])
+  const meta = /** @type {{ nextSeq?: number } | undefined} */ (all[LEDGER_META_KEY])
+  if (meta && typeof meta.nextSeq === 'number') {
+    return meta.nextSeq
+  }
+  const { events } = await readLedgerState(adapter)
+  const maxSeq = events.reduce((max, event) => Math.max(max, event.seq ?? 0), 0)
+  return maxSeq + 1
 }
 
 export function createChromeLedgerAdapter() {

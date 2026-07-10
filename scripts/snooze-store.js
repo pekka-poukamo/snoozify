@@ -1,4 +1,4 @@
-import { getUID } from './utils.js'
+import { getUID, toWakeDay } from './utils.js'
 import {
   createChromeSyncAdapter,
   createMemorySyncAdapter,
@@ -12,6 +12,7 @@ import {
   appendEvent,
   createChromeLedgerAdapter,
   createMemoryLedgerAdapter,
+  getNextSeq,
   readHistory,
 } from './local-ledger.js'
 
@@ -19,8 +20,6 @@ import {
 /** @typedef {{ id: string, title: string, url: string }} WokenPage */
 /** @typedef {'scheduled' | 'manual'} WakeReason */
 /** @typedef {import('./local-ledger.js').LedgerEvent} HistoryEntry */
-
-const toWakeDay = wakeAt => new Date(wakeAt).toISOString().split('T')[0]
 
 const toLegacyPage = page => ({
   title: page.title,
@@ -52,11 +51,12 @@ export function createSnoozeStore({
   /** @type {ScheduledPage[]} */
   let scheduled = []
   let loaded = false
-  let commitChain = Promise.resolve()
+  let mutationChain = Promise.resolve()
   /** @type {Set<() => void>} */
   const changeListeners = new Set()
   let onChangedSetup = false
   let debounceTimer = null
+  let suppressStorageNotify = 0
 
   async function ensureLoaded() {
     if (!loaded) {
@@ -85,6 +85,10 @@ export function createSnoozeStore({
     }, ON_CHANGED_DEBOUNCE_MS)
   }
 
+  function beginLocalWrite() {
+    suppressStorageNotify++
+  }
+
   function setupOnChangedListeners() {
     if (!useChromeListeners || onChangedSetup || typeof chrome === 'undefined') {
       return
@@ -98,10 +102,15 @@ export function createSnoozeStore({
       const relevant = Object.keys(changes).some(key =>
         key.startsWith('snoozify_v3_') || key.startsWith('snoozify_ledger_')
       )
-      if (relevant) {
-        loaded = false
-        scheduleNotifyChanged()
+      if (!relevant) {
+        return
       }
+      if (suppressStorageNotify > 0) {
+        suppressStorageNotify--
+        return
+      }
+      loaded = false
+      scheduleNotifyChanged()
     }
 
     chrome.storage.onChanged.addListener(handleStorageChange)
@@ -112,14 +121,15 @@ export function createSnoozeStore({
    * @param {() => Promise<T>} fn
    * @returns {Promise<T>}
    */
-  function enqueueCommit(fn) {
-    const result = commitChain.then(fn)
-    commitChain = result.catch(() => {})
+  function enqueueMutation(fn) {
+    const result = mutationChain.then(fn)
+    mutationChain = result.catch(() => {})
     return result
   }
 
   async function commitScheduled() {
     try {
+      beginLocalWrite()
       await writeScheduled(sync, scheduled)
     } catch (error) {
       loaded = false
@@ -138,7 +148,7 @@ export function createSnoozeStore({
      */
     scheduleSnoozes(pages, wakeAt) {
       const wakeDay = toWakeDay(wakeAt)
-      return enqueueCommit(async () => {
+      return enqueueMutation(async () => {
         await ensureLoaded()
         const created = pages.map(page => ({
           id: getUID(),
@@ -158,7 +168,7 @@ export function createSnoozeStore({
      * @returns {Promise<WokenPage[]>}
      */
     wakeSnoozes(ids, reason) {
-      return enqueueCommit(async () => {
+      return enqueueMutation(async () => {
         await ensureLoaded()
         const idSet = new Set(ids)
         const woken = scheduled.filter(page => idSet.has(page.id))
@@ -166,13 +176,19 @@ export function createSnoozeStore({
           return []
         }
 
-        const nextScheduled = scheduled.filter(page => !idSet.has(page.id))
-        const priorEvents = await readHistory(ledger)
-        const maxSeq = priorEvents.reduce((max, event) => Math.max(max, event.seq ?? 0), 0)
+        scheduled = scheduled.filter(page => !idSet.has(page.id))
+        try {
+          await commitScheduled()
+        } catch (error) {
+          loaded = false
+          throw error
+        }
 
         try {
+          beginLocalWrite()
+          const seq = await getNextSeq(ledger)
           await appendEvent(ledger, {
-            seq: maxSeq + 1,
+            seq,
             at: new Date().toISOString(),
             type: 'Woken',
             reason,
@@ -183,40 +199,33 @@ export function createSnoozeStore({
           throw error
         }
 
-        scheduled = nextScheduled
-        await commitScheduled()
-
         return woken.map(({ id, title, url }) => ({ id, title, url }))
       })
     },
 
     /** @returns {Promise<ScheduledPage[]>} */
-    getScheduled() {
-      return enqueueCommit(async () => {
-        await ensureLoaded()
-        return [...scheduled]
-      })
+    async getScheduled() {
+      await ensureLoaded()
+      return [...scheduled]
     },
 
     /** @param {string} wakeDay */
-    getScheduledCountForWakeDay(wakeDay) {
+    async getScheduledCountForWakeDay(wakeDay) {
       const normalized = toWakeDay(wakeDay)
-      return enqueueCommit(async () => {
-        await ensureLoaded()
-        return scheduled.filter(page => page.wakeAt === normalized).length
-      })
+      await ensureLoaded()
+      return scheduled.filter(page => page.wakeAt === normalized).length
     },
 
     /** @param {{ limit?: number }} [options] */
     getHistory(options) {
-      return enqueueCommit(() => readHistory(ledger, options))
+      return readHistory(ledger, options)
     },
 
     /**
      * @param {Array<{ title: string, url: string, id?: string, uid?: string, wakeAt?: string, wakeUpDate?: string }>} pages
      */
     importSnoozes(pages) {
-      return enqueueCommit(async () => {
+      return enqueueMutation(async () => {
         await ensureLoaded()
         const existingIds = new Set(scheduled.map(page => page.id))
 
@@ -235,15 +244,13 @@ export function createSnoozeStore({
     },
 
     /** @returns {Promise<Array<{ title: string, url: string, uid: string, wakeUpDate: string }>>} */
-    exportScheduled() {
-      return enqueueCommit(async () => {
-        await ensureLoaded()
-        return scheduled.map(toLegacyPage)
-      })
+    async exportScheduled() {
+      await ensureLoaded()
+      return scheduled.map(toLegacyPage)
     },
 
     clearAll() {
-      return enqueueCommit(async () => {
+      return enqueueMutation(async () => {
         await ensureLoaded()
         scheduled = []
         await commitScheduled()
@@ -259,7 +266,7 @@ export function createSnoozeStore({
 
     /** @returns {Promise<void>} */
     migrate() {
-      return enqueueCommit(async () => {
+      return enqueueMutation(async () => {
         const all = await sync.get(null)
         const meta = /** @type {{ v?: number } | undefined} */ (all[META_KEY])
         if (meta?.v === 3) {
@@ -275,6 +282,7 @@ export function createSnoozeStore({
 
         scheduled = legacyPages
         loaded = true
+        beginLocalWrite()
         await writeScheduled(sync, scheduled)
         await removeLegacyV2Keys(sync)
       })
