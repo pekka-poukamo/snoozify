@@ -9,23 +9,24 @@ describe('worker', () => {
       addListener(cb){ this._listeners.add(cb) },
       _emit(a){ this._listeners.forEach(cb=>cb(a)) },
     }
+    chrome.alarms.get = vi.fn((_name, cb) => cb(null))
     chrome.notifications.create.mockClear()
     chrome.tabs.create.mockClear()
     chrome.storage.sync._store = {}
+    chrome.storage.local._store = {}
   })
 
   it('on alarm opens due pages once and posts notification', async () => {
-    await import('/scripts/worker.js')
-    // Seed storage with one due page and one future
     chrome.storage.sync._store = {
-      snoozify_dates: ['2023-01-01', '2099-01-01'],
-      'snoozify_2023-01-01': [
-        { page_title: 'Due', page_url: 'https://due', page_hash: 'due' },
-      ],
-      'snoozify_2099-01-01': [
-        { page_title: 'Future', page_url: 'https://future', page_hash: 'f' },
+      snoozify_v3_meta: { v: 3, chunks: ['snoozify_v3_c0'] },
+      snoozify_v3_c0: [
+        { i: 'due', t: 'Due', u: 'https://due', w: '2023-01-01' },
+        { i: 'f', t: 'Future', u: 'https://future', w: '2099-01-01' },
       ],
     }
+    chrome.storage.local._store = {}
+    vi.resetModules()
+    await import('/scripts/worker.js')
 
     // Emit alarm
     chrome.alarms.onAlarm._emit({ name: 'Snoozify scheduler' })

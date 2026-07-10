@@ -1,9 +1,9 @@
-import Storage from '/scripts/storage.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 import { byDate } from '/scripts/utils.js'
 import { openPageById } from '/scripts/snoozer.js'
 
 const initializeHistory = () => {
-	Storage.getSnoozedPages()
+	SnoozeStore.exportScheduled()
 	.then(snoozedPages => {
 		const pageLinksElement = document.querySelector('#page-links')
 		pageLinksElement.innerHTML = ''
@@ -77,14 +77,14 @@ const validateImportedData = data => {
 document.addEventListener("DOMContentLoaded", () => {
 	initializeHistory()
 
-	Storage.calculateStorageSize()
+	SnoozeStore.calculateStorageSize()
 
 	document.querySelector('#clear-button').addEventListener('click', () => {
-		Storage.clearSnoozedPages().then(initializeHistory)
+		SnoozeStore.clearAll().then(initializeHistory)
 	})
 
 	document.querySelector('#export-button').addEventListener('click', () => {
-		Storage.getSnoozedPages().then(snoozedPages => {
+		SnoozeStore.exportScheduled().then(snoozedPages => {
 			const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snoozedPages));
 			const downloadAnchorNode = document.createElement('a');
 			downloadAnchorNode.setAttribute("href", dataStr);
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 						return;
 					}
 
-					Storage.importSnoozifiedPages(importedData).then(() => {
+					SnoozeStore.importSnoozes(importedData).then(() => {
 						initializeHistory(); // Reload the history
 					});
 				} catch (error) {

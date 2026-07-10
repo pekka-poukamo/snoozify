@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 const importMock = vi.fn(() => Promise.resolve())
-vi.mock('/scripts/storage.js', () => ({
+vi.mock('/scripts/snooze-store.js', () => ({
   default: {
-    getSnoozedPages: vi.fn().mockResolvedValue([]),
+    exportScheduled: vi.fn().mockResolvedValue([]),
     calculateStorageSize: vi.fn(),
-    clearSnoozedPages: vi.fn().mockResolvedValue(undefined),
-    importSnoozifiedPages: (...a) => importMock(...a),
+    clearAll: vi.fn().mockResolvedValue(undefined),
+    importSnoozes: (...a) => importMock(...a),
   }
 }))
 

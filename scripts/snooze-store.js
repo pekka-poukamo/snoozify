@@ -4,6 +4,9 @@ import {
   createMemorySyncAdapter,
   readScheduled,
   writeScheduled,
+  readLegacyV2Scheduled,
+  removeLegacyV2Keys,
+  META_KEY,
 } from './sync-projection.js'
 import {
   appendEvent,
@@ -247,6 +250,15 @@ export function createSnoozeStore({
       })
     },
 
+    calculateStorageSize() {
+      chrome.storage.sync.getBytesInUse(null, bytes => {
+        console.log(`Total sync storage used: ${bytes} bytes`)
+      })
+      chrome.storage.local.getBytesInUse(null, bytes => {
+        console.log(`Total local storage used: ${bytes} bytes`)
+      })
+    },
+
     /** @param {() => void} callback */
     onChanged(callback) {
       changeListeners.add(callback)
@@ -255,9 +267,27 @@ export function createSnoozeStore({
       }
     },
 
-    /** Phase 3 — stub until migration is wired */
-    async migrate() {
-      throw new Error('SnoozeStore.migrate() is not implemented until Phase 3')
+    /** @returns {Promise<void>} */
+    migrate() {
+      return enqueueCommit(async () => {
+        const all = await sync.get(null)
+        const meta = /** @type {{ v?: number } | undefined} */ (all[META_KEY])
+        if (meta?.v === 3) {
+          await removeLegacyV2Keys(sync)
+          return
+        }
+
+        const legacyPages = await readLegacyV2Scheduled(sync)
+        if (legacyPages === null) {
+          await removeLegacyV2Keys(sync)
+          return
+        }
+
+        scheduled = legacyPages
+        loaded = true
+        await writeScheduled(sync, scheduled)
+        await removeLegacyV2Keys(sync)
+      })
     },
   }
 }

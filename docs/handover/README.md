@@ -6,8 +6,8 @@ Phased implementation of [snooze-store.md](../plan/snooze-store.md). Each phase 
 |-------|--------|--------|----------|
 | 1 — Documentation | `cursor/snooze-store-plan-ba12` | Done | — |
 | 2 — SnoozeStore core | `cursor/snooze-store-phase2-1018` | Done | [phase-2-checklist.md](./phase-2-checklist.md) |
-| 3 — Migration and wiring | TBD | Pending | — |
-| 4 — History UI | TBD | Pending | — |
+| 3 — Migration and wiring | `cursor/snooze-store-phase3-1018` | Done | [phase-3-checklist.md](./phase-3-checklist.md) |
+| 4 — History UI | `cursor/snooze-store-phase4-1018` | In progress | [phase-4-checklist.md](./phase-4-checklist.md) |
 | 5 — Cleanup | TBD | Pending | — |
 
 ## Process per phase

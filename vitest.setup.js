@@ -57,6 +57,7 @@ globalThis.chrome.storage.local = globalThis.chrome.storage.local?._store
 globalThis.chrome.storage.onChanged = globalThis.chrome.storage.onChanged || createEvent()
 
 globalThis.chrome.runtime = globalThis.chrome.runtime || { lastError: null }
+globalThis.chrome.runtime.onInstalled = globalThis.chrome.runtime.onInstalled || createEvent()
 
 globalThis.chrome.tabs = globalThis.chrome.tabs || {
   query: vi.fn(async () => []),
@@ -70,5 +71,6 @@ globalThis.chrome.notifications = globalThis.chrome.notifications || {
 
 globalThis.chrome.alarms = globalThis.chrome.alarms || {
   create: vi.fn(() => {}),
+  get: vi.fn((_name, cb) => cb(null)),
   onAlarm: createEvent(),
 }

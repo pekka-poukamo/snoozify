@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import Storage from '/scripts/storage.js'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 describe('snoozified-pages UI', () => {
   beforeEach(() => {
@@ -23,22 +22,20 @@ describe('snoozified-pages UI', () => {
       <button id="import-button"></button>
       <input id="import-file-input" type="file" />
     `
-    chrome.storage.sync._store = {}
+    chrome.storage.sync._store = {
+      snoozify_v3_meta: { v: 3, chunks: ['snoozify_v3_c0'] },
+      snoozify_v3_c0: [
+        { i: 'x1', t: 'A', u: 'https://a', w: '2023-01-01' },
+        { i: 'x2', t: 'B', u: 'https://b', w: '2023-01-01' },
+      ],
+    }
+    chrome.storage.local._store = {}
     chrome.runtime.lastError = null
   })
 
   it('renders grouped pages with counts and wires wakeup buttons', async () => {
-    chrome.storage.sync._store = {
-      snoozify_dates: ['2023-01-01'],
-      'snoozify_2023-01-01': [
-        { page_title: 'A', page_url: 'https://a', page_hash: 'x1' },
-        { page_title: 'B', page_url: 'https://b', page_hash: 'x2' },
-      ],
-    }
-
     await import('/pages/snoozified-pages.js')
 
-    // Trigger DOMContentLoaded
     document.dispatchEvent(new Event('DOMContentLoaded'))
     await new Promise(r => setTimeout(r, 0))
 
@@ -46,8 +43,6 @@ describe('snoozified-pages UI', () => {
     expect(groups.length).toBe(1)
     expect(groups[0].children.length).toBe(2)
 
-    // Click first wakeup button
     groups[0].querySelector('.page-link__wakeup-button').click()
   })
 })
-

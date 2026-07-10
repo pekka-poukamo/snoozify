@@ -1,15 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import * as Snoozer from '/scripts/snoozer.js'
-import Storage from '/scripts/storage.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 import * as Utils from '/scripts/utils.js'
 
 describe('snoozer coverage', () => {
   beforeEach(() => {
     chrome.storage.sync._store = {}
+    chrome.storage.local._store = {}
     chrome.tabs.create.mockClear()
   })
 
-  it('snoozePages assigns new UIDs and delegates to Storage', async () => {
+  it('snoozePages assigns new ids and persists via SnoozeStore', async () => {
     const uidSpy = vi.spyOn(Utils, 'getUID')
       .mockReturnValueOnce('u1')
       .mockReturnValueOnce('u2')
@@ -21,11 +22,8 @@ describe('snoozer coverage', () => {
 
     await Snoozer.snoozePages(pages)
 
-    // Verify stored data contains the assigned UIDs
-    expect(Object.keys(chrome.storage.sync._store)).toContain('snoozify_dates')
-    const allValues = Object.values(chrome.storage.sync._store).flat()
-    const storedUids = JSON.stringify(allValues)
-    expect(storedUids).toMatch(/u1|u2/)
+    const scheduled = await SnoozeStore.exportScheduled()
+    expect(scheduled.map(page => page.uid).sort()).toEqual(['u1', 'u2'])
 
     uidSpy.mockRestore()
   })
@@ -35,14 +33,14 @@ describe('snoozer coverage', () => {
   })
 
   it('openPageById rejects when page not found', async () => {
-    await Storage.snoozePages([
+    await SnoozeStore.importSnoozes([
       { title: 'A', url: 'https://a', uid: 'x1', wakeUpDate: '2023-01-01' },
     ])
     await expect(Snoozer.openPageById('missing')).rejects.toBeTruthy()
   })
 
   it('openPagesDueBy resolves empty and does not open tabs when none due', async () => {
-    await Storage.snoozePages([
+    await SnoozeStore.importSnoozes([
       { title: 'Future', url: 'https://f', uid: 'f1', wakeUpDate: '2099-01-01' },
     ])
     const result = await Snoozer.openPagesDueBy(Date.parse('2020-01-01'))
@@ -50,4 +48,3 @@ describe('snoozer coverage', () => {
     expect(chrome.tabs.create).not.toHaveBeenCalled()
   })
 })
-
