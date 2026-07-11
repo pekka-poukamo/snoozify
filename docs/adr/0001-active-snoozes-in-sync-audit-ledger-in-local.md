@@ -1,6 +1,6 @@
 # ADR-0001: Active snoozes in sync, audit ledger in local storage
 
-**Status:** Accepted  
+**Status:** Accepted (amended 2026-07-11 — wake write order)  
 **Date:** 2026-07-10  
 **Context:** [SnoozeStore implementation plan](../plan/snooze-store.md)
 
@@ -23,10 +23,21 @@ Scheduled snoozes must survive device switches when the user signs into Chrome o
 1. **Scheduled snoozes** live in `chrome.storage.sync` as a chunked active projection (schema v3).
 2. **Audit history** lives in `chrome.storage.local` as an append-only ledger with ring-buffer retention.
 3. All mutations go through a single **SnoozeStore** module with a serialized commit queue.
-4. **Wake** appends a `Woken` event to the ledger, then removes pages from the sync projection. Store before opening tabs.
+4. **Wake** removes pages from the sync projection, then appends a `Woken` event to the ledger. `wakeSnoozes` must complete both writes before callers open tabs (store before tabs).
 5. **Migration** from v2 reads legacy sync keys, writes v3 projection, removes legacy keys. No retroactive ledger backfill.
 
 Callers use only the SnoozeStore interface. Chunking, dual adapters, and schema version are implementation details behind the seam.
+
+### Wake write order (v1)
+
+Sync removal comes first so a failed or partial wake cannot leave a page scheduled after tabs would have opened (RC4). Ledger append is second.
+
+| Failure point | Scheduled state | Ledger | Caller behavior |
+|---------------|-----------------|--------|-----------------|
+| Sync write fails | Unchanged | Unchanged | `wakeSnoozes` rejects; no tabs opened |
+| Ledger write fails after sync | Page removed | No event | `wakeSnoozes` rejects; page gone from schedule, no audit entry (accepted for v1) |
+
+Ledger-first ordering was rejected: a successful ledger write with a failed sync removal would leave the page scheduled and allow duplicate alarm wake.
 
 ## Consequences
 
@@ -44,6 +55,7 @@ Callers use only the SnoozeStore interface. Chunking, dual adapters, and schema 
 - Two internal adapters (sync projection, local ledger) instead of one.
 - Chunking required for both areas (8 KB per-item limit applies to local too).
 - Multi-device simultaneous use can race on alarm wake before sync propagates removal (accepted for v1).
+- If ledger append fails after sync removal succeeds, the page leaves the schedule with no `Woken` audit entry (accepted for v1; sync-first ordering prioritizes RC4 over audit completeness).
 
 ### Neutral
 

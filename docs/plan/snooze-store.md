@@ -166,14 +166,13 @@ Append via `chunk-pack.js` rotation when chunk would exceed ~7 KB. Ring buffer: 
 openPagesDueBy(date):
   1. due = filter getScheduled() where wakeAt <= date (no openedDate check)
   2. if empty → return []
-  3. wakeSnoozes(due.ids, 'scheduled')   // ledger append + sync projection
+  3. wakeSnoozes(due.ids, 'scheduled')   // sync projection update, then ledger append
   4. due.forEach(p => tabs.create({ url: p.url }))
   5. return due
 
 openPageById(uid):
-  1. page = find in getScheduled()
-  2. wakeSnoozes([uid], 'manual')
-  3. tabs.create({ url: page.url })
+  1. wakeSnoozes([uid], 'manual')
+  2. tabs.create({ url: page.url })
 ```
 
 Crash after step 3: no duplicate alarm wake (RC4 fixed). Crash during step 4: partial tab opens acceptable.
