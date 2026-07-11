@@ -145,6 +145,52 @@ hr {
 	margin-top: 1rem;
 }
 
+.tabs {
+	display: flex;
+	gap: 0.5rem;
+	margin: 1rem 0;
+}
+
+.tab {
+	width: auto;
+	flex: 1;
+	margin-bottom: 0;
+	border: 1px solid var(--background-color-dark);
+	background: transparent;
+}
+
+.tab--active {
+	background: var(--background-color-dark);
+	font-weight: 600;
+}
+
+.quota-warning {
+	font-size: 0.75rem;
+	color: #8a4b00;
+	background: #fff4e5;
+	border-radius: 0.4rem;
+	padding: 0.5rem 0.75rem;
+	margin: 0 0 1rem;
+}
+
+.history-entry {
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--background-color-dark);
+}
+
+.history-entry__meta {
+	font-size: 0.75rem;
+	color: var(--text-color-secondary);
+	margin-bottom: 0.35rem;
+}
+
+.history-entry__pages {
+	margin: 0;
+	padding-left: 1rem;
+	font-size: 0.85rem;
+}
+
 /* Dev environment */
 
 @media (min-width: 500px) {

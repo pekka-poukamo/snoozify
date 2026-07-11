@@ -1,19 +1,37 @@
 import { openPagesDueBy } from '/scripts/snoozer.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 
 const alarmName = 'Snoozify scheduler'
 
 let pageLaunchInProgress = false
+const migrateReady = SnoozeStore.migrate().catch(error => {
+	console.error('SnoozeStore migration failed:', error)
+})
 
-chrome.alarms.create(alarmName, {
-	delayInMinutes: 0,
-	periodInMinutes: 1,
+export const ensureSchedulerAlarm = () => new Promise(resolve => {
+	chrome.alarms.get(alarmName, alarm => {
+		if (!alarm) {
+			chrome.alarms.create(alarmName, {
+				delayInMinutes: 0,
+				periodInMinutes: 1,
+			})
+		}
+		resolve()
+	})
+})
+
+ensureSchedulerAlarm()
+
+chrome.runtime.onInstalled.addListener(() => {
+	migrateReady.catch(() => {})
 })
 
 chrome.alarms.onAlarm.addListener(alarm => {
 if (alarm.name === alarmName && !pageLaunchInProgress) {
 		console.log('Snoozify alarm', alarm)
 		pageLaunchInProgress = true;
-		openPagesDueBy(new Date())
+		migrateReady
+		.then(() => openPagesDueBy(new Date()))
 		.then(pagesOpened => {
 			launchPageOpenNotification(pagesOpened)
 			pageLaunchInProgress = false

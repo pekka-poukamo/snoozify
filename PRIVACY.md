@@ -1,7 +1,14 @@
 # Privacy Policy
 
-Snoozify does not collect, transmit, or share any personal data.
+Snoozify does not collect, transmit, or share any personal data with the extension author or any third-party service.
 
-All data (snoozed tab URLs, titles, and wake-up dates) is stored exclusively in Chrome's own sync storage, which is managed by Google and governed by [Google's Privacy Policy](https://policies.google.com/privacy). No data is sent to any external server.
+## What is stored
 
-The extension does not contain any analytics, tracking, or advertising code.
+| Data | Storage area | Syncs across devices |
+|------|--------------|----------------------|
+| Scheduled snoozed tabs (URL, title, wake date) | `chrome.storage.sync` | Yes — follows your Chrome profile |
+| Wake history (which tabs were opened and when) | `chrome.storage.local` | No — stays on this device |
+
+Scheduled data is managed by Google's Chrome sync infrastructure and governed by [Google's Privacy Policy](https://policies.google.com/privacy). Wake history is stored only in local extension storage on your device.
+
+No data is sent to any external server operated by the extension author. The extension does not contain analytics, tracking, or advertising code.

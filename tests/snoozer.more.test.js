@@ -1,16 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('/scripts/testing.js', () => ({ testing: true }))
 import * as Snoozer from '/scripts/snoozer.js'
-import Storage from '/scripts/storage.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 
 describe('snoozer more', () => {
   beforeEach(() => {
     chrome.storage.sync._store = {}
+    chrome.storage.local._store = {}
     chrome.tabs.create.mockClear()
   })
 
   it('openPagesDueBy opens only due pages (not future)', async () => {
-    await Storage.snoozePages([
+    await SnoozeStore.importSnoozes([
       { title: 'Due', url: 'https://due', uid: '1', wakeUpDate: '2023-01-01' },
       { title: 'Future', url: 'https://future', uid: '2', wakeUpDate: '2099-01-01' },
     ])

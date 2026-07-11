@@ -10,6 +10,8 @@ const WEEKDAYS = {
 
 export const byDate = (page1, page2) => new Date(page1.wakeUpDate) - new Date(page2.wakeUpDate)
 
+export const toWakeDay = wakeAt => new Date(wakeAt).toISOString().split('T')[0]
+
 // getUID function from https://dev.to/rahmanfadhil/how-to-generate-unique-id-in-javascript-1b13#comment-1ol48
 export const getUID = () => String(
 	Date.now().toString(32) + Math.random().toString(16)

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as Snoozer from '/scripts/snoozer.js'
-import Storage from '/scripts/storage.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 
 vi.mock('/scripts/testing.js', () => ({ testing: true }))
 
@@ -9,6 +9,7 @@ describe('snoozer', () => {
     chrome.tabs.create.mockClear()
     chrome.tabs.remove.mockClear()
     chrome.storage.sync._store = {}
+    chrome.storage.local._store = {}
   })
 
   it('snoozePages rejects empty input', async () => {
@@ -16,7 +17,7 @@ describe('snoozer', () => {
   })
 
   it('openPageById opens tab and removes page when found', async () => {
-    await Storage.snoozePages([
+    await SnoozeStore.importSnoozes([
       { title: 'A', url: 'https://a', uid: 'id1', wakeUpDate: '2023-01-01' },
     ])
     const uid = await Snoozer.openPageById('id1')

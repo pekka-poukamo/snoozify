@@ -18,23 +18,27 @@ Load unpacked by cloning this repo and following the [Chrome developer documenta
 
 ## Storage and backwards compatibility
 
-Snoozify stores data in `chrome.storage.sync` using a versioned schema. **Backwards compatibility is a hard requirement** — users' snoozed pages must survive extension updates without data loss.
+Snoozify stores data using a versioned schema in Chrome extension storage. **Backwards compatibility is a hard requirement** — users' snoozed pages must survive extension updates without data loss.
 
-### Current schema (v2)
+Architecture docs: [SnoozeStore plan](docs/plan/snooze-store.md) · [ADR-0001](docs/adr/0001-active-snoozes-in-sync-audit-ledger-in-local.md) · [Domain context](CONTEXT.md).
 
-| Key | Value |
-|-----|-------|
-| `snoozify_version` | Schema version integer (currently `2`) |
-| `snoozify_dates` | `string[]` — ISO dates (`YYYY-MM-DD`) that have snoozed pages |
-| `snoozify_YYYY-MM-DD` | `{page_title, page_url, page_hash}[]` — pages for that date |
+### Schema v3 (current)
+
+| Area | Keys | Holds |
+|------|------|-------|
+| `chrome.storage.sync` | `snoozify_v3_meta`, `snoozify_v3_cN` | Scheduled snoozes (chunked, syncs across devices) |
+| `chrome.storage.local` | `snoozify_ledger_meta`, `snoozify_ledger_N` | Wake history (`Woken` events, local per device) |
+
+Scheduled pages use compact records `{ i, t, u, w }` (id, title, url, wake day). Wake history is append-only with ring-buffer retention (~500 events).
+
+All storage access goes through `scripts/snooze-store.js`. Migration from v2 runs automatically on extension install/update.
 
 ### Making schema changes
 
-1. Bump `CURRENT_SCHEMA_VERSION` in `scripts/storage.js`
-2. Add a migration case in `runMigrations()` in the same file (create it if it doesn't exist yet)
-3. Call `Storage.runMigrations()` from `worker.js` via `chrome.runtime.onInstalled`
-4. Add tests for the migration in `tests/storage.migration.test.js`
-5. Update this section
+1. Update `SnoozeStore` and internal projection/ledger modules
+2. Add migration logic in `SnoozeStore.migrate()` (called from `worker.js` on install)
+3. Add tests in `tests/storage.migration.test.js` and `tests/snooze-store.test.js`
+4. Update this section and `PRIVACY.md`
 
 ## This is FYI open source
 

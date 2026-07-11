@@ -1,5 +1,5 @@
 import { snoozePages } from '/scripts/snoozer.js'
-import Storage from '/scripts/storage.js'
+import SnoozeStore from '/scripts/snooze-store.js'
 import {
 	getUID,
 	trace,
@@ -69,7 +69,7 @@ const initializeMonthButton = (options = {}) => {
 const getSnoozeButton = buttonTemplate => weekday => {
 	const weekDayFormatOptions = {weekday: 'long'}
 	const dateFormatOptions = {day: 'numeric', month: 'short'}
-	return Storage.getSnoozedPageCount(weekday.toISOString())
+	return SnoozeStore.getScheduledCountForWakeDay(weekday.toISOString())
 	.then(count => {
 		const button = buttonTemplate.cloneNode(true)
 

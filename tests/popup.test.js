@@ -6,7 +6,7 @@ const snoozeMock = vi.fn(() => Promise.resolve())
 vi.mock('/scripts/snoozer.js', () => ({ snoozePages: (...args) => snoozeMock(...args) }))
 
 const getCountMock = vi.fn(async () => 0)
-vi.mock('/scripts/storage.js', () => ({ default: { getSnoozedPageCount: (...a)=>getCountMock(...a) } }))
+vi.mock('/scripts/snooze-store.js', () => ({ default: { getScheduledCountForWakeDay: (...a)=>getCountMock(...a) } }))
 
 describe('popup UI', () => {
   beforeEach(async () => {
