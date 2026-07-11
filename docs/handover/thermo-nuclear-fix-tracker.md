@@ -3,7 +3,7 @@
 **PR:** [#10 — SnoozeStore](https://github.com/pekka-poukamo/snoozify/pull/10)  
 **Branch:** `cursor/thermo-nuclear-fixes-9c5c`  
 **Review date:** 2026-07-10  
-**Verdict:** ~~Request changes~~ → **Ready for re-review** (all blocking items addressed)
+**Verdict:** ~~Request changes~~ → **Approved** (review cycle 2 — no blockers)
 
 ## Progress summary
 
@@ -168,3 +168,4 @@
 | 2026-07-10 09:25 | store-core: atomic wake, mutation-only queue, onChanged dedup, nextSeq (`12b2493`) |
 | 2026-07-10 09:26 | callers-ui: snoozer J6/J7, snoozified-pages SP1, test dedup + S1 torn-write (`6941404`) |
 | 2026-07-11 16:56 | B1 onChanged wake fix: single notify after wake, suppress op count (`cursor/onchanged-wake-fix-2da3`) |
+| 2026-07-11 16:57 | Review cycle 2 thermo-nuclear: **APPROVE** — no blockers (`ad5436a`) |
