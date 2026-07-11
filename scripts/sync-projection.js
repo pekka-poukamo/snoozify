@@ -65,16 +65,19 @@ export async function readScheduled(adapter) {
 /**
  * @param {StorageAdapter} adapter
  * @param {ScheduledPage[]} scheduled
+ * @param {{ onBeforeWrite?: (storageOps: number) => void }} [options]
+ * @returns {Promise<number>}
  */
-export async function writeScheduled(adapter, scheduled) {
+export async function writeScheduled(adapter, scheduled, { onBeforeWrite } = {}) {
   const compactRecords = scheduled.map(toCompact)
 
-  await writeChunkedProjection(adapter, {
+  return writeChunkedProjection(adapter, {
     records: compactRecords,
     chunkPrefix: CHUNK_PREFIX,
     metaKey: META_KEY,
     buildMeta: newChunkKeys => ({ v: SCHEMA_VERSION, chunks: newChunkKeys }),
     isOwnedKey: isV3Key,
+    onBeforeWrite,
   })
 }
 
@@ -130,13 +133,18 @@ export async function readLegacyV2Scheduled(adapter) {
 
 /**
  * @param {StorageAdapter} adapter
+ * @param {{ onBeforeWrite?: (storageOps: number) => void }} [options]
+ * @returns {Promise<number>}
  */
-export async function removeLegacyV2Keys(adapter) {
+export async function removeLegacyV2Keys(adapter, { onBeforeWrite } = {}) {
   const all = await adapter.get(null)
   const legacyKeys = Object.keys(all).filter(isLegacyV2Key)
   if (legacyKeys.length > 0) {
+    onBeforeWrite?.(1)
     await adapter.remove(legacyKeys)
+    return 1
   }
+  return 0
 }
 
 export function createChromeSyncAdapter() {
@@ -144,5 +152,5 @@ export function createChromeSyncAdapter() {
 }
 
 export function createMemorySyncAdapter(store = {}) {
-  return createMemoryStorageAdapter(store)
+  return createMemoryStorageAdapter(store, { area: 'sync' })
 }

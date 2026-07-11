@@ -85,8 +85,8 @@ export function createSnoozeStore({
     }, ON_CHANGED_DEBOUNCE_MS)
   }
 
-  function beginLocalWrite() {
-    suppressStorageNotify++
+  function beginLocalWrite(count = 1) {
+    suppressStorageNotify += count
   }
 
   function setupOnChangedListeners() {
@@ -127,15 +127,21 @@ export function createSnoozeStore({
     return result
   }
 
-  async function commitScheduled() {
+  /**
+   * @param {{ notify?: boolean }} [options]
+   */
+  async function commitScheduled({ notify = true } = {}) {
     try {
-      beginLocalWrite()
-      await writeScheduled(sync, scheduled)
+      await writeScheduled(sync, scheduled, {
+        onBeforeWrite: ops => beginLocalWrite(ops),
+      })
     } catch (error) {
       loaded = false
       throw error
     }
-    notifyChanged()
+    if (notify) {
+      notifyChanged()
+    }
   }
 
   setupOnChangedListeners()
@@ -178,14 +184,13 @@ export function createSnoozeStore({
 
         scheduled = scheduled.filter(page => !idSet.has(page.id))
         try {
-          await commitScheduled()
+          await commitScheduled({ notify: false })
         } catch (error) {
           loaded = false
           throw error
         }
 
         try {
-          beginLocalWrite()
           const seq = await getNextSeq(ledger)
           await appendEvent(ledger, {
             seq,
@@ -193,11 +198,15 @@ export function createSnoozeStore({
             type: 'Woken',
             reason,
             pages: woken.map(({ id, title, url }) => ({ id, title, url })),
+          }, {
+            onBeforeWrite: ops => beginLocalWrite(ops),
           })
         } catch (error) {
           loaded = false
           throw error
         }
+
+        notifyChanged()
 
         return woken.map(({ id, title, url }) => ({ id, title, url }))
       })
@@ -282,9 +291,12 @@ export function createSnoozeStore({
 
         scheduled = legacyPages
         loaded = true
-        beginLocalWrite()
-        await writeScheduled(sync, scheduled)
-        await removeLegacyV2Keys(sync)
+        await writeScheduled(sync, scheduled, {
+          onBeforeWrite: ops => beginLocalWrite(ops),
+        })
+        await removeLegacyV2Keys(sync, {
+          onBeforeWrite: ops => beginLocalWrite(ops),
+        })
       })
     },
   }

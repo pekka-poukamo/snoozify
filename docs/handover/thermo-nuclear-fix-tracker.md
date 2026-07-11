@@ -3,7 +3,7 @@
 **PR:** [#10 — SnoozeStore](https://github.com/pekka-poukamo/snoozify/pull/10)  
 **Branch:** `cursor/thermo-nuclear-fixes-9c5c`  
 **Review date:** 2026-07-10  
-**Verdict:** ~~Request changes~~ → **Ready for re-review** (all blocking items addressed)
+**Verdict:** ~~Request changes~~ → **Approved** (review cycle 2 — no blockers)
 
 ## Progress summary
 
@@ -13,7 +13,7 @@
 | Store core (queue, onChanged, atomic wake, nextSeq) | ✅ done | store-core | `12b2493` |
 | Callers + UI + tests | ✅ done | callers-ui | `6941404` |
 
-**Tests:** 50/50 pass (`npm run test:run`)
+**Tests:** 53/53 pass (`npm run test:run`)
 
 ---
 
@@ -134,10 +134,28 @@
 ## Verification
 
 - [x] All blocking checkboxes complete
-- [x] `npm run test:run` passes (50/50)
+- [x] `npm run test:run` passes (53/53)
 - [x] Tracker updated with final status
 
 **Open / non-blocking:** J6 batch API, SP2 file split
+
+---
+
+## Review cycle 2 — B1 onChanged wake contract
+
+**Review date:** 2026-07-11  
+**Branch:** `cursor/onchanged-wake-fix-2da3`
+
+### B1 — `onChanged` contract broken on wake
+
+- [x] `commitScheduled({ notify?: boolean })` — defer `notifyChanged()` when `notify: false`
+- [x] `wakeSnoozes`: commit sync with `notify: false`, append ledger, single `notifyChanged()` after both stores updated
+- [x] `beginLocalWrite(count)` — suppress credit matches actual storage op count (set + optional remove)
+- [x] `writeChunkedProjection` returns `1 + (orphans ? 1 : 0)`; `onBeforeWrite` hook fires before writes
+- [x] `writeScheduled` / `appendEvent` propagate op count and `onBeforeWrite`
+- [x] Tests: history visible in listener on wake; single fire with `useChromeListeners: true`
+
+**Files:** `scripts/snooze-store.js`, `scripts/chunked-write.js`, `scripts/sync-projection.js`, `scripts/local-ledger.js`, `scripts/storage-adapter.js`, `tests/snooze-store.test.js`
 
 ---
 
@@ -149,4 +167,5 @@
 | 2026-07-10 09:25 | infra-dedup: `storage-adapter.js`, `chunked-write.js`, `toWakeDay`, adapter dedup (`64e00d0`) |
 | 2026-07-10 09:25 | store-core: atomic wake, mutation-only queue, onChanged dedup, nextSeq (`12b2493`) |
 | 2026-07-10 09:26 | callers-ui: snoozer J6/J7, snoozified-pages SP1, test dedup + S1 torn-write (`6941404`) |
-| 2026-07-10 09:27 | All agents complete; 50/50 tests green; ready for re-review |
+| 2026-07-11 16:56 | B1 onChanged wake fix: single notify after wake, suppress op count (`cursor/onchanged-wake-fix-2da3`) |
+| 2026-07-11 16:57 | Review cycle 2 thermo-nuclear: **APPROVE** — no blockers (`ad5436a`) |
