@@ -169,7 +169,65 @@ describe('SnoozeStore', () => {
     const [page] = await store.scheduleSnoozes([{ title: 'A', url: 'https://a' }], '2023-01-01')
     listener.mockClear()
     await store.wakeSnoozes([page.id], 'scheduled')
-    expect(listener).toHaveBeenCalled()
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('onChanged fires once after wake with history visible', async () => {
+    const listener = vi.fn(async () => {
+      const history = await store.getHistory()
+      expect(history).toHaveLength(1)
+      expect(history[0]).toMatchObject({
+        type: 'Woken',
+        reason: 'scheduled',
+        pages: [{ title: 'A', url: 'https://a' }],
+      })
+    })
+    store.onChanged(listener)
+    const [page] = await store.scheduleSnoozes([{ title: 'A', url: 'https://a' }], '2023-01-01')
+    listener.mockClear()
+    await store.wakeSnoozes([page.id], 'scheduled')
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('onChanged listener sees fresh history after wake', async () => {
+    const [page] = await store.scheduleSnoozes([{ title: 'A', url: 'https://a' }], '2023-01-01')
+
+    let historyLength = 0
+    /** @type {() => void} */
+    let resolveListener
+    const listenerDone = new Promise(resolve => {
+      resolveListener = resolve
+    })
+    const listener = vi.fn(async () => {
+      historyLength = (await store.getHistory()).length
+      resolveListener()
+    })
+    store.onChanged(listener)
+
+    await store.wakeSnoozes([page.id], 'manual')
+    await listenerDone
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(historyLength).toBe(1)
+  })
+
+  it('onChanged fires once after wake with chrome listeners enabled', async () => {
+    vi.useFakeTimers()
+    const listener = vi.fn()
+    const chromeStore = createSnoozeStore({
+      syncAdapter: createMemorySyncAdapter(syncStore),
+      ledgerAdapter: createMemoryLedgerAdapter(ledgerStore),
+      useChromeListeners: true,
+    })
+    chromeStore.onChanged(listener)
+    const [page] = await chromeStore.scheduleSnoozes(
+      [{ title: 'A', url: 'https://a' }],
+      '2023-01-01'
+    )
+    listener.mockClear()
+    await chromeStore.wakeSnoozes([page.id], 'scheduled')
+    await vi.runAllTimersAsync()
+    expect(listener).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
   })
 
   it('rehydrates from persisted sync and ledger stores', async () => {

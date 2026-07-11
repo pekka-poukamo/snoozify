@@ -79,8 +79,10 @@ export async function getNextSeq(adapter) {
 /**
  * @param {StorageAdapter} adapter
  * @param {LedgerEvent} event
+ * @param {{ onBeforeWrite?: (storageOps: number) => void }} [options]
+ * @returns {Promise<number>}
  */
-export async function appendEvent(adapter, event) {
+export async function appendEvent(adapter, event, { onBeforeWrite } = {}) {
   const { events, meta } = await readLedgerState(adapter)
   const nextEvents = [...events, event]
   const retained = nextEvents.length > MAX_RETAINED_EVENTS
@@ -89,7 +91,7 @@ export async function appendEvent(adapter, event) {
 
   const nextSeq = (meta?.nextSeq ?? events.length) + 1
 
-  await writeChunkedProjection(adapter, {
+  return writeChunkedProjection(adapter, {
     records: retained,
     chunkPrefix: LEDGER_CHUNK_PREFIX,
     metaKey: LEDGER_META_KEY,
@@ -100,6 +102,7 @@ export async function appendEvent(adapter, event) {
       nextSeq,
     }),
     isOwnedKey: isLedgerKey,
+    onBeforeWrite,
   })
 }
 
@@ -119,5 +122,5 @@ export function createChromeLedgerAdapter() {
 }
 
 export function createMemoryLedgerAdapter(store = {}) {
-  return createMemoryStorageAdapter(store)
+  return createMemoryStorageAdapter(store, { area: 'local' })
 }

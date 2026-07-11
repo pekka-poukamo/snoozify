@@ -2,6 +2,17 @@
 
 /**
  * @param {'sync' | 'local'} area
+ * @param {Record<string, { oldValue?: unknown, newValue?: unknown }>} changes
+ */
+function notifyStorageChange(area, changes) {
+  const onChanged = globalThis.chrome?.storage?.onChanged
+  if (onChanged && typeof onChanged._emit === 'function') {
+    onChanged._emit(changes, area)
+  }
+}
+
+/**
+ * @param {'sync' | 'local'} area
  * @returns {StorageAdapter}
  */
 export function createChromeStorageAdapter(area) {
@@ -44,9 +55,10 @@ export function createChromeStorageAdapter(area) {
 
 /**
  * @param {Record<string, unknown>} [store]
+ * @param {{ area?: 'sync' | 'local' }} [options]
  * @returns {StorageAdapter}
  */
-export function createMemoryStorageAdapter(store = {}) {
+export function createMemoryStorageAdapter(store = {}, { area } = {}) {
   const data = store
   return {
     async get(keys) {
@@ -68,11 +80,28 @@ export function createMemoryStorageAdapter(store = {}) {
       return {}
     },
     async set(obj) {
+      const changes = {}
+      for (const [key, value] of Object.entries(obj)) {
+        changes[key] = {
+          oldValue: key in data ? data[key] : undefined,
+          newValue: value,
+        }
+      }
       Object.assign(data, obj)
+      if (area) {
+        notifyStorageChange(area, changes)
+      }
     },
     async remove(keys) {
+      const changes = {}
       for (const key of keys) {
-        delete data[key]
+        if (key in data) {
+          changes[key] = { oldValue: data[key], newValue: undefined }
+          delete data[key]
+        }
+      }
+      if (area && Object.keys(changes).length > 0) {
+        notifyStorageChange(area, changes)
       }
     },
   }
